@@ -91,33 +91,26 @@ public class LongestCommonSubsequence {
         }
 
         //输出最长公共子串
-        for (int i=1;i<flag.length;){
-            for (int j=1;j<flag[0].length;){
-                if (ch1[i-1] == ch2[j-1]){
-                    System.out.print(ch1[i-1]);
+        int i=1;
+        int j=1;
+        while (i<flag.length && j<flag[0].length){
+            if (ch1[i-1] == ch2[j-1]){
+                System.out.print(ch1[i-1]);
+                i++;
+                j++;
+            }else {
+                if (flag[i+1][j] > flag[i][j+1]){
                     i++;
-                    j++;
                 }else {
-                    //先判断 i+1 和 j+1 是否已经超出边界
-                    if ((i+1) > (flag.length-1)){
-                        j++;
-                    }else if ((j+1) > (flag[0].length-1)) {
-                        i++;
-                    }else {
-                        if (flag[i][j+1] > flag[i+1][j]){
-                            j++;
-                        }else {
-                            i++;
-                        }
-                    }
+                    j++;
                 }
             }
         }
+
         System.out.println();
         //输出右下角，矩阵最后一个空的数，就是 LCS 的值
         return flag[ch1.length][ch2.length];
     }
-
 
     /**
      * 计算两个词之间的 LCS 长度
@@ -169,7 +162,7 @@ public class LongestCommonSubsequence {
 
     @Test
     public void test(){
-        System.out.println(compute1("goge","ggle"));
+        System.out.println(compute1("google","elgoog"));
     }
 
 }
