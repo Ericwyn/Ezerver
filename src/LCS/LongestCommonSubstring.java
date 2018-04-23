@@ -1,3 +1,5 @@
+package LCS;
+
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -163,8 +165,6 @@ public class LongestCommonSubstring {
                 maxLCSSize = maxTemp;
             }
         }
-
-
         return maxLCSSize;
     }
 
