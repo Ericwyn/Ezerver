@@ -7,9 +7,14 @@
  - 通过 LCS 算法做出的联想词功能 `AssociationWord`
  
 ## job
- - ConstructionPalindrome [构造回文](https://www.nowcoder.com/test/question/28c1dc06bc9b4afd957b01acdf046e69?pid=1725829&tid=15338836)
- - CharacterShift [字符移位](https://www.nowcoder.com/question/next?pid=1725829&qid=44802&tid=15338836)
- - FunnyNum [有趣的数字](https://www.nowcoder.com/question/next?pid=1725829&qid=44802&tid=15338836)
+ - ConstructionPalindrome 构造回文
+ - CharacterShift 字符移位
+ - FunnyNum 有趣的数字
+ - Solution 二维数组里面
+ - ChangeTime 变换次数 
+ - MagicNumber 神奇数字
+ - MagicNumber 神奇数字第二种解法，（看起来）没那么暴力
+
  
  
 
