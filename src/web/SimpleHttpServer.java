@@ -2,8 +2,11 @@ package web;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,10 +24,12 @@ import java.net.Socket;
  * Created by Ericwyn on 18-5-1.
  */
 public class SimpleHttpServer {
-    private static final int TCP_PORT = 9090;
+    private static final int SERVER_PORT = 9090;
+    public static final String WEB_ROOT = System.getProperty("user.dir")+ File.separator + "webroot";
+    private static final String SHUTDOWN_COMMAND = "/QUIT";
 
-    public static void main(String[] args) throws IOException , WebServerException{
-        ServerSocket ss = new ServerSocket(TCP_PORT);
+    public void simpleServerTest() throws IOException, WebServerException {
+        ServerSocket ss = new ServerSocket(SERVER_PORT);
         Socket socket = ss.accept();
         BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -48,6 +53,32 @@ public class SimpleHttpServer {
         br.close();
         socket.close();
         ss.close();
+    }
+
+    public void await() throws WebServerException{
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(SERVER_PORT);
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new WebServerException("无法新建 ServerSocket ，有可能端口被占用，发生 IOE ：" + e.getMessage());
+        }
+        while (true){
+            Socket socket = null;
+            InputStream input = null;
+            OutputStream output = null;
+            try {
+                socket = serverSocket.accept();
+                input = socket.getInputStream();
+                output = socket.getOutputStream();
+                Request request = Request.parseRequset(input);
+                System.out.println(request.getMethod());
+            }catch (IOException e) {
+                e.printStackTrace();
+                throw new WebServerException("发生错误");
+            }
+        }
+
     }
 
 }

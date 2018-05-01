@@ -1,5 +1,8 @@
 package web;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  *
  * 请求的封装类
@@ -9,6 +12,8 @@ package web;
 public class Request {
     public static final int METHOD_GET = 1;
     public static final int METHOD_POST = 2;
+
+    private final static int BUFFER_SIZE = 1024;
 
     private int method;
     private String uril;
@@ -28,8 +33,28 @@ public class Request {
 
     }
 
-    public static Request parseRequset(String socketInputSteam) throws WebServerException{
-        String[] requsetLine = socketInputSteam.split("\n");
+    public static Request parseRequset(InputStream inputStream) throws IOException, WebServerException {
+        byte[] bytes = new byte[BUFFER_SIZE];
+        StringBuilder inputStreamString = new StringBuilder();
+        int readLength;
+        try {
+            readLength = inputStream.read(bytes);
+        }catch (Exception e){
+            readLength =-1;
+        }
+        for(int i = 0; i < readLength; i++) {
+            inputStreamString.append((char)bytes[i]);
+        }
+//        while ((inputStream.read(bytes))!=-1){
+//            for(int i = 0; i < bytes.length; i++) {
+//                inputStreamString.append((char)bytes[i]);
+//            }
+//        }
+        return parseRequset(inputStreamString.toString());
+    }
+
+    public static Request parseRequset(String socketInputSteamString) throws WebServerException{
+        String[] requsetLine = socketInputSteamString.split("\n");
         Request request=new Request();
         String[] requsetLine0 = requsetLine[0].split(" ");
         if (requsetLine0.length != 3){

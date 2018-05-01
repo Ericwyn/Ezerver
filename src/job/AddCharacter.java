@@ -22,7 +22,7 @@ import java.util.Scanner;
  输出例子1:
  1
 
-求子串
+PS 求最长子串
 
  * Created by Ericwyn on 18-4-28.
  */
