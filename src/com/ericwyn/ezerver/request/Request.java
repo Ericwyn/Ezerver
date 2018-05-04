@@ -4,6 +4,7 @@ import com.ericwyn.ezerver.expection.WebServerException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 /**
  *
@@ -30,6 +31,8 @@ public class Request {
     private String acceptLanguage;
     private String cookie;
     private String UpgradeInsecureRequests;
+    private HashMap<String,RequestParam> paramMap;
+
 
     private Request(){
 
@@ -88,6 +91,19 @@ public class Request {
                 request.setCookie(requsetLine[i].replace("Cookie: ",""));
             }
         }
+        //解析参数
+        if (request.method == METHOD_GET){
+            // /?a=1&b=2
+            if (request.getUri().contains("?")){
+                String[] split = (request.getUri().split("\\?")[1]).split("&");
+                for (String temp:split){
+                    String[] temp2 = temp.split("=");
+                    request.getParamMap().put(temp2[0],new RequestParam(temp2[0],temp2[1]));
+                }
+            }
+        }else if (request.method == METHOD_POST){
+
+        }
         return request;
     }
 
@@ -95,7 +111,7 @@ public class Request {
         return method;
     }
 
-    public void setMethod(int method) {
+    private void setMethod(int method) {
         this.method = method;
     }
 
@@ -103,7 +119,7 @@ public class Request {
         return uri;
     }
 
-    public void setUri(String uri) {
+    private void setUri(String uri) {
         this.uri = uri;
     }
 
@@ -111,7 +127,7 @@ public class Request {
         return version;
     }
 
-    public void setVersion(String version) {
+    private void setVersion(String version) {
         this.version = version;
     }
 
@@ -119,7 +135,7 @@ public class Request {
         return host;
     }
 
-    public void setHost(String host) {
+    private void setHost(String host) {
         this.host = host;
     }
 
@@ -127,7 +143,7 @@ public class Request {
         return connection;
     }
 
-    public void setConnection(String connection) {
+    private void setConnection(String connection) {
         this.connection = connection;
     }
 
@@ -135,7 +151,7 @@ public class Request {
         return cacheControl;
     }
 
-    public void setCacheControl(String cacheControl) {
+    private void setCacheControl(String cacheControl) {
         this.cacheControl = cacheControl;
     }
 
@@ -143,7 +159,7 @@ public class Request {
         return userAgent;
     }
 
-    public void setUserAgent(String userAgent) {
+    private void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }
 
@@ -151,7 +167,7 @@ public class Request {
         return accept;
     }
 
-    public void setAccept(String accept) {
+    private void setAccept(String accept) {
         this.accept = accept;
     }
 
@@ -159,7 +175,7 @@ public class Request {
         return acceptEncoding;
     }
 
-    public void setAcceptEncoding(String acceptEncoding) {
+    private void setAcceptEncoding(String acceptEncoding) {
         this.acceptEncoding = acceptEncoding;
     }
 
@@ -167,7 +183,7 @@ public class Request {
         return acceptLanguage;
     }
 
-    public void setAcceptLanguage(String acceptLanguage) {
+    private void setAcceptLanguage(String acceptLanguage) {
         this.acceptLanguage = acceptLanguage;
     }
 
@@ -175,7 +191,7 @@ public class Request {
         return cookie;
     }
 
-    public void setCookie(String cookie) {
+    private void setCookie(String cookie) {
         this.cookie = cookie;
     }
 
@@ -183,7 +199,7 @@ public class Request {
         return Pragma;
     }
 
-    public void setPragma(String pragma) {
+    private void setPragma(String pragma) {
         Pragma = pragma;
     }
 
@@ -191,7 +207,26 @@ public class Request {
         return UpgradeInsecureRequests;
     }
 
-    public void setUpgradeInsecureRequests(String upgradeInsecureRequests) {
+    private void setUpgradeInsecureRequests(String upgradeInsecureRequests) {
         UpgradeInsecureRequests = upgradeInsecureRequests;
     }
+
+    public HashMap<String, RequestParam> getParamMap() {
+        if (paramMap==null){
+            paramMap = new HashMap<>();
+        }
+        return paramMap;
+    }
+
+
+    public String getMethodName(){
+        if (this.method == METHOD_GET){
+            return "GET";
+        }
+        if (this.method == METHOD_POST){
+            return "POST";
+        }
+        return "未知方法";
+    }
+
 }

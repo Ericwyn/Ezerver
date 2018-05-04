@@ -31,11 +31,12 @@ public class Response {
         FileInputStream fis = null;
         try {
             //通过 uri 获取文件地址
-            File file = new File(SimpleHttpServer.WEB_ROOT,requset.getUri());
+            String fileName = requset.getUri().split("\\?")[0];
+            File file = new File(SimpleHttpServer.WEB_ROOT,fileName);
             //将 uri 文件内容放到返回的 http 包里面
             if (file.exists()){
                 output.write("HTTP/1.1 200 OK\n".getBytes());
-                String contentType = ResponseUtil.getResponseContentType(requset.getUri());
+                String contentType = ResponseUtil.getResponseContentType(fileName);
                 output.write(("Content-Type: "+contentType+"; charset=UTF-8\n\n").getBytes());
                 fis = new FileInputStream(file);
                 int readLength;

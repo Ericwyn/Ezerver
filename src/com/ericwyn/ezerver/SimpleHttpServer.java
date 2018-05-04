@@ -5,10 +5,14 @@ import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.response.Response;
 import com.ericwyn.ezerver.util.LogUtils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -42,32 +46,33 @@ public class SimpleHttpServer {
 
     private boolean allowPrintThreadList = false;
 
-    //    public void simpleServerTest() throws IOException, WebServerException {
-//        ServerSocket ss = new ServerSocket(SERVER_PORT);
-//        Socket socket = ss.accept();
-//        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//
-//        String buffer = null;
-//        StringBuilder requsetLine = new StringBuilder();
-//        while ((buffer = br.readLine())!=null && !buffer.equals("")){
-//            requsetLine.append(buffer).append("\n");
-//        }
-//
-//        Request request = Request.parseRequset(requsetLine.toString());
-//
-//        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-//        bw.write("HTTP/1.1 200 OK\n");
-//        bw.write("Content-Type: text/html; charset=UTF-8\n\n");
-//        bw.write("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
-//                + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
-//                + "</body>\n" + "</html>\n");
-//        bw.flush();
-//        bw.close();
-//
-//        br.close();
-//        socket.close();
-//        ss.close();
-//    }
+        public void simpleServerTest() throws IOException, WebServerException {
+        ServerSocket ss = new ServerSocket(SERVER_PORT);
+        Socket socket = ss.accept();
+        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+        String buffer = null;
+        StringBuilder requsetLine = new StringBuilder();
+        while ((buffer = br.readLine())!=null && !buffer.equals("")){
+            requsetLine.append(buffer).append("\n");
+        }
+
+        System.out.println(requsetLine.toString());
+        Request request = Request.parseRequset(requsetLine.toString());
+
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        bw.write("HTTP/1.1 200 OK\n");
+        bw.write("Content-Type: text/html; charset=UTF-8\n\n");
+        bw.write("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
+                + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
+                + "</body>\n" + "</html>\n");
+        bw.flush();
+        bw.close();
+
+        br.close();
+        socket.close();
+        ss.close();
+    }
 
     public SimpleHttpServer(){
 
