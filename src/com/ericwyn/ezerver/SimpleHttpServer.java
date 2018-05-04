@@ -46,9 +46,21 @@ public class SimpleHttpServer {
 
     private boolean allowPrintThreadList = false;
 
-        public void simpleServerTest() throws IOException, WebServerException {
+
+    /**
+     * 简单的服务器测试
+     * 直接打印请求报文
+     *
+     * 单线程、阻塞、只能处理一个请求
+     *
+     * @throws IOException
+     * @throws WebServerException
+     */
+    public void simpleServerTest() throws IOException, WebServerException {
         ServerSocket ss = new ServerSocket(SERVER_PORT);
+        System.out.println("运行在" + SERVER_PORT+"端口");
         Socket socket = ss.accept();
+        System.out.println("收到一个请求");
         BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         String buffer = null;
@@ -56,10 +68,9 @@ public class SimpleHttpServer {
         while ((buffer = br.readLine())!=null && !buffer.equals("")){
             requsetLine.append(buffer).append("\n");
         }
-
         System.out.println(requsetLine.toString());
         Request request = Request.parseRequset(requsetLine.toString());
-
+        System.out.println("请求的 uri 是"+request.getUri());
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         bw.write("HTTP/1.1 200 OK\n");
         bw.write("Content-Type: text/html; charset=UTF-8\n\n");
@@ -149,15 +160,21 @@ public class SimpleHttpServer {
                     //解析 socket 里面的 Requset 请求
                     Request request = Request.parseRequset(input);
                     //返回 Response 给 output
+                    //当Response 为 null 的时候也可以处理
                     Response response = new Response(request,output);
                     response.sendStaticResource();
                     LogUtils.debugLoger(randomThreadNum + "请求返回处理完成");
-                    socket.close();
                     LogUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
-
                 } catch (IOException | WebServerException e) {
                     e.printStackTrace();
                 } finally {
+                    try {
+                        if (!socket.isClosed()){
+                            socket.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     if (input!=null){
                         try {
                             input.close();
