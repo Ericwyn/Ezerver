@@ -46,13 +46,17 @@ public class SimpleHttpServer {
 
     private ArrayList<Thread> threadListForPrint;
 
+    //设定是否自动打印线程情况
     private boolean allowPrintThreadList = false;
+
+    //是否有用户自定义的 handleMethod 的flag
     private boolean useHandleMethod = false;
 
     //自定义的各种处理方法
-//    private ArrayList<HandleMethod> handleMethods = new ArrayList<>();
-    HashMap<String,HandleMethod> handleMethodsMap = new HashMap<>();
-
+    private HashMap<String,HandleMethod> handleMethodsMap = new HashMap<>();
+    
+    public static LogUtils logUtils = new LogUtils();
+    
     /**
      * 简单的服务器测试
      * 直接打印请求报文
@@ -115,19 +119,18 @@ public class SimpleHttpServer {
                 SERVER_PORT = newPort;
             }
             serverSocket = new ServerSocket(SERVER_PORT);
-            LogUtils.debugLoger("新建 ServerSocket 运行在 "+SERVER_PORT+" 端口");
+            logUtils.debugLoger("新建 ServerSocket 运行在 "+SERVER_PORT+" 端口");
         }catch (Exception e){
             e.printStackTrace();
             throw new WebServerException("无法新建 ServerSocket ，有可能端口被占用，发生 IOE ：" + e.getMessage());
         }
-        ServerSocket finalServerSocket = serverSocket;
         awaitThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true){
                     Socket socket = null;
                     try {
-                        socket = finalServerSocket.accept();
+                        socket = serverSocket.accept();
                         if (continueAcceptFlag){
                             startSocketThread(socket);
                         }else {
@@ -137,22 +140,22 @@ public class SimpleHttpServer {
                         e.printStackTrace();
                     }
                 }
-                LogUtils.usuallyPrintLogerln("awaitThread 监听到 Flag 以为 false 所以退出");
+                logUtils.usuallyPrintLogerln("awaitThread 监听到 Flag 以为 false 所以退出");
             }
         });
         awaitThread.setName("awaitThread serverSocket 监听");
         if (allowPrintThreadList){
-            LogUtils.debugLoger("开启 ThreadList 状态打印");
+            logUtils.debugLoger("开启 ThreadList 状态打印");
             threadListForPrint.add(awaitThread);
             startPrintThreadLoger();
         }
         awaitThread.start();
-        LogUtils.debugLoger("serverSocket 线程 开启成功");
+        logUtils.debugLoger("serverSocket 线程 开启成功");
     }
 
     private void startSocketThread(Socket socket){
         int randomThreadNum = (int)(Math.random()*10000);
-        LogUtils.debugLoger("收到一个请求，编号"+randomThreadNum);
+        logUtils.debugLoger("收到一个请求，编号"+randomThreadNum);
         Thread temp = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -166,19 +169,22 @@ public class SimpleHttpServer {
                     Request request = Request.parseRequset(input);
                     // 当 useHandleMethod 并且拥有对这个 uri 请求路径的处理方法的时候才处理
                     // 不然全部按照静态资源请求处理
-                    if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri())){
-                        LogUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
-                        HandleMethod handleMethod = handleMethodsMap.get(request.getUri());
+                    if (request == null){
+                        throw new WebServerException(randomThreadNum + "报文长度为0，报文舍弃");
+                    }
+                    if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri().split("\\?")[0])){
+                        logUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
+                        HandleMethod handleMethod = handleMethodsMap.get(request.getUri().split("\\?")[0]);
                         handleMethod.RequestDo(request,output);
-                        LogUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
+                        logUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
                     }else {
                         //使用基础
                         //返回 Response 给 output
                         //当Response 为 null 的时候也可以处理
                         Response response = new Response(request,output);
                         response.sendStaticResource();
-                        LogUtils.debugLoger(randomThreadNum + "请求返回处理完成");
-                        LogUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
+                        logUtils.debugLoger(randomThreadNum + "请求返回处理完成");
+                        logUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
                     }
                 } catch (IOException | WebServerException e) {
                     e.printStackTrace();
@@ -193,7 +199,7 @@ public class SimpleHttpServer {
                     if (input!=null){
                         try {
                             input.close();
-                            LogUtils.debugLoger(randomThreadNum + "请求的 socket input 已经关闭");
+                            logUtils.debugLoger(randomThreadNum + "请求的 socket input 已经关闭");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -201,7 +207,7 @@ public class SimpleHttpServer {
                     if (output!=null){
                         try {
                             output.close();
-                            LogUtils.debugLoger(randomThreadNum + "请求的 socket output 已经关闭");
+                            logUtils.debugLoger(randomThreadNum + "请求的 socket output 已经关闭");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -231,15 +237,15 @@ public class SimpleHttpServer {
     public void close() throws Exception{
         if (awaitThread.isAlive()){
             continueAcceptFlag = false;
-            LogUtils.debugLoger("将 continueAcceptFlag 设置为 false ");
+            logUtils.debugLoger("将 continueAcceptFlag 设置为 false ");
             sendLastAcceptToServerSocket();
-            LogUtils.debugLoger("发送了最后一个请求");
+            logUtils.debugLoger("发送了最后一个请求");
             closeServerSocket();
-            LogUtils.debugLoger("关闭了 serverSocket ");
-            LogUtils.debugLoger("SimpleHttpServer 应该已经退出了");
+            logUtils.debugLoger("关闭了 serverSocket ");
+            logUtils.debugLoger("SimpleHttpServer 应该已经退出了");
             sendLastAcceptToServerSocket();
         }else {
-            LogUtils.debugLoger("线程未启动");
+            logUtils.debugLoger("线程未启动");
         }
     }
 
@@ -261,7 +267,7 @@ public class SimpleHttpServer {
             out.write("a".getBytes());
             out.close();
         } catch (IOException e) {
-            LogUtils.debugLoger("最终请求发送失败，ServerSocket 已经关闭");
+            logUtils.debugLoger("最终请求发送失败，ServerSocket 已经关闭");
         }
 
     }
@@ -274,22 +280,22 @@ public class SimpleHttpServer {
             public void run() {
                 while (true){
                     if (threadListForPrint.size()==0){
-                        LogUtils.usuallyPrintLogerln("\t\t | 线程 List 已经清空，该 ThreadList 监听线程结束");
+                        logUtils.usuallyPrintLogerln("\t\t | 线程 List 已经清空，该 ThreadList 监听线程结束");
                         break;
                     }
-                    LogUtils.usuallyPrintLogerln("\t\t -------------------------------------");
-                    LogUtils.usuallyPrintLogerln("\t\t | 共有 " + threadListForPrint.size() + " 个线程");
+                    logUtils.usuallyPrintLogerln("\t\t -------------------------------------");
+                    logUtils.usuallyPrintLogerln("\t\t | 共有 " + threadListForPrint.size() + " 个线程");
                     for (int i = 0; i< threadListForPrint.size(); i++){
-                        LogUtils.usuallyPrintLoger("\t\t | No " + i+" : ");
+                        logUtils.usuallyPrintLoger("\t\t | No " + i+" : ");
                         if (threadListForPrint.get(i).isAlive()){
-                            LogUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程建在");
+                            logUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程建在");
                         }else {
-                            LogUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程消亡");
+                            logUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程消亡");
                             removeList.add(threadListForPrint.get(i));
                         }
                     }
-                    LogUtils.usuallyPrintLogerln("\t\t | 清理 "+removeList.size()+" 个线程");
-                    LogUtils.usuallyPrintLogerln("\t\t -------------------------------------");
+                    logUtils.usuallyPrintLogerln("\t\t | 清理 "+removeList.size()+" 个线程");
+                    logUtils.usuallyPrintLogerln("\t\t -------------------------------------");
                     threadListForPrint.removeAll(removeList);
                     removeList.clear();
                     try {
@@ -306,6 +312,14 @@ public class SimpleHttpServer {
         if (!useHandleMethod){
             useHandleMethod = true;
         }
-        handleMethodsMap.put(handleMethod.getUri(),handleMethod);
+        handleMethodsMap.put(handleMethod.getUri().split("\\?")[0],handleMethod);
+    }
+
+    public void debug(){
+        SimpleHttpServer.logUtils.setPrintDebug(true);
+    }
+
+    public void allowPrintThreadList(){
+        allowPrintThreadList = true;
     }
 }

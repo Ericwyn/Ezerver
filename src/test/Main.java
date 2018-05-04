@@ -22,7 +22,10 @@ public class Main {
             @Override
             public void RequestDo(Request request, OutputStream outputStream) throws IOException {
                 HashMap<String, RequestParam> paramMap = request.getParamMap();
-                System.out.println("request 的 请求参数共有 "+paramMap.size()+"个");
+                System.out.println("请求的uri为"+request.getUri());
+                System.out.println("param数量 " + paramMap.size());
+                System.out.println("请求方法为" + request.getMethodName());
+
                 outputStream.write("HTTP/1.1 200 OK\n".getBytes());
                 outputStream.write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
                 outputStream.write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
@@ -31,6 +34,9 @@ public class Main {
                 outputStream.close();
             }
         });
+
+        server.debug();
+        server.allowPrintThreadList();
 
         server.start();
         Scanner in = new Scanner(System.in);

@@ -4,30 +4,38 @@ package com.ericwyn.ezerver.util;
  * Created by Ericwyn on 18-5-4.
  */
 public class LogUtils {
-    private static boolean printDebug = true;
-    private static boolean printErrorLog = true;
+    private boolean printDebug = false;
+    private boolean printErrorLog = true;
 
     //printDebug 打印
-    public static void debugLoger(String msg){
+    public void debugLoger(String msg){
         if (printDebug){
             System.out.println(msg);
         }
     }
 
     //printDebug 打印
-    public static void usuallyPrintLogerln(String msg){
+    public void usuallyPrintLogerln(String msg){
         System.out.println(msg);
     }
 
     //error log 打印
-    public static void errorLoger(String msg){
+    public void errorLoger(String msg){
         if (printErrorLog){
             System.out.println(msg);
         }
     }
 
-    public static void usuallyPrintLoger(String msg){
+    //无论如何都会打印出来
+    public void usuallyPrintLoger(String msg){
         System.out.print(msg);
     }
 
+    public void setPrintDebug(boolean printDebug) {
+        this.printDebug = printDebug;
+    }
+
+    public void setPrintErrorLog(boolean printErrorLog) {
+        this.printErrorLog = printErrorLog;
+    }
 }

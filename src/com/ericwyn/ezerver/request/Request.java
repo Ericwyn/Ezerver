@@ -1,5 +1,6 @@
 package com.ericwyn.ezerver.request;
 
+import com.ericwyn.ezerver.SimpleHttpServer;
 import com.ericwyn.ezerver.expection.WebServerException;
 import com.ericwyn.ezerver.util.LogUtils;
 
@@ -20,6 +21,7 @@ public class Request {
     public static final int METHOD_POST = 2;
 
     private final static int BUFFER_SIZE = 1024;
+    private static LogUtils logUtils = SimpleHttpServer.logUtils;
 
     private int method;
     private String uri;
@@ -62,10 +64,10 @@ public class Request {
         for(int i = 0; i < readLength; i++) {
             inputStreamString.append((char)bytes[i]);
         }
-        LogUtils.debugLoger("\n收到的报文如下，总长度为"+inputStreamString.length());
-        LogUtils.debugLoger("----------------------------");
-        LogUtils.debugLoger(inputStreamString.toString());
-        LogUtils.debugLoger("----------------------------\n\n");
+        logUtils.debugLoger("\n收到的报文如下，总长度为"+inputStreamString.length());
+        logUtils.debugLoger("----------------------------");
+        logUtils.debugLoger(inputStreamString.toString());
+        logUtils.debugLoger("----------------------------\n\n");
         return parseRequset(inputStreamString.toString());
     }
 
@@ -79,7 +81,7 @@ public class Request {
         if (requestLine0.length != 3){
             throw new WebServerException("Request 报文错误，无法解析首行请求行所以无法知道其请求方法");
         }else {
-            request.setUri(requestLine0[1].split("\\?")[0]);
+            request.setUri(requestLine0[1]);
             request.setVersion(requestLine0[2]);
             if (requestLine0[0].equals("GET")){
                 request.method = METHOD_GET;

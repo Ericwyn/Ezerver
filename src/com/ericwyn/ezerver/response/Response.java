@@ -16,7 +16,10 @@ import java.net.SocketException;
  */
 public class Response {
     private Request requset;
+
     private static final int BUFFER_SIZE = 1024;
+    private static LogUtils logUtils = SimpleHttpServer.logUtils;
+
     OutputStream output ;
 
     public Response(Request request,OutputStream output){
@@ -54,7 +57,7 @@ public class Response {
             }
 
         }catch (SocketException e){
-            LogUtils.errorLoger("连接发生异常，可能是连接已经断开：异常信息如下："+e.getMessage());
+            logUtils.errorLoger("连接发生异常，可能是连接已经断开：异常信息如下："+e.getMessage());
         }
         finally {
             if (fis!=null){
