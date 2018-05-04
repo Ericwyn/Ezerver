@@ -1,4 +1,4 @@
-package web;
+package com.ericwyn.ezerver.expection;
 
 /**
  * Created by Ericwyn on 18-5-1.

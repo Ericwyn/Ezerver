@@ -1,4 +1,6 @@
-package web;
+package com.ericwyn.ezerver.request;
+
+import com.ericwyn.ezerver.expection.WebServerException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +18,7 @@ public class Request {
     private final static int BUFFER_SIZE = 1024;
 
     private int method;
-    private String uril;
+    private String uri;
     private String version;
     private String host;
     private String Pragma;
@@ -45,11 +47,6 @@ public class Request {
         for(int i = 0; i < readLength; i++) {
             inputStreamString.append((char)bytes[i]);
         }
-//        while ((inputStream.read(bytes))!=-1){
-//            for(int i = 0; i < bytes.length; i++) {
-//                inputStreamString.append((char)bytes[i]);
-//            }
-//        }
         return parseRequset(inputStreamString.toString());
     }
 
@@ -65,7 +62,7 @@ public class Request {
             }else if (requsetLine0[0].equals("POST")){
                 request.method = METHOD_POST;
             }
-            request.setUril(requsetLine0[1]);
+            request.setUri(requsetLine0[1]);
             request.setVersion(requsetLine0[2]);
         }
         for (int i=1;i<requsetLine.length;i++){
@@ -102,12 +99,12 @@ public class Request {
         this.method = method;
     }
 
-    public String getUril() {
-        return uril;
+    public String getUri() {
+        return uri;
     }
 
-    public void setUril(String uril) {
-        this.uril = uril;
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     public String getVersion() {
