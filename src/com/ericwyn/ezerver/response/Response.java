@@ -2,6 +2,7 @@ package com.ericwyn.ezerver.response;
 
 import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.SimpleHttpServer;
+import com.ericwyn.ezerver.util.ResponseUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,12 +35,8 @@ public class Response {
             //将 uri 文件内容放到返回的 http 包里面
             if (file.exists()){
                 output.write("HTTP/1.1 200 OK\n".getBytes());
-                if (requset.getUri().endsWith(".css")){
-
-                }else if (requset.getUri().endsWith(".css")){
-
-                }
-                output.write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
+                String contentType = ResponseUtil.getResponseContentType(requset.getUri());
+                output.write(("Content-Type: "+contentType+"; charset=UTF-8\n\n").getBytes());
                 fis = new FileInputStream(file);
                 int readLength;
                 while ((readLength = fis.read(buffer,0,BUFFER_SIZE))>0){
