@@ -79,7 +79,7 @@ public class Request {
         if (requestLine0.length != 3){
             throw new WebServerException("Request 报文错误，无法解析首行请求行所以无法知道其请求方法");
         }else {
-            request.setUri(requestLine0[1]);
+            request.setUri(requestLine0[1].split("\\?")[0]);
             request.setVersion(requestLine0[2]);
             if (requestLine0[0].equals("GET")){
                 request.method = METHOD_GET;

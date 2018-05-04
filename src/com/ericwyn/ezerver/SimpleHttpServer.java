@@ -1,6 +1,7 @@
 package com.ericwyn.ezerver;
 
 import com.ericwyn.ezerver.expection.WebServerException;
+import com.ericwyn.ezerver.handle.HandleMethod;
 import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.response.Response;
 import com.ericwyn.ezerver.util.LogUtils;
@@ -16,6 +17,7 @@ import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -45,7 +47,11 @@ public class SimpleHttpServer {
     private ArrayList<Thread> threadListForPrint;
 
     private boolean allowPrintThreadList = false;
+    private boolean useHandleMethod = false;
 
+    //自定义的各种处理方法
+//    private ArrayList<HandleMethod> handleMethods = new ArrayList<>();
+    HashMap<String,HandleMethod> handleMethodsMap = new HashMap<>();
 
     /**
      * 简单的服务器测试
@@ -79,7 +85,6 @@ public class SimpleHttpServer {
                 + "</body>\n" + "</html>\n");
         bw.flush();
         bw.close();
-
         br.close();
         socket.close();
         ss.close();
@@ -159,12 +164,22 @@ public class SimpleHttpServer {
                     output = socket.getOutputStream();
                     //解析 socket 里面的 Requset 请求
                     Request request = Request.parseRequset(input);
-                    //返回 Response 给 output
-                    //当Response 为 null 的时候也可以处理
-                    Response response = new Response(request,output);
-                    response.sendStaticResource();
-                    LogUtils.debugLoger(randomThreadNum + "请求返回处理完成");
-                    LogUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
+                    // 当 useHandleMethod 并且拥有对这个 uri 请求路径的处理方法的时候才处理
+                    // 不然全部按照静态资源请求处理
+                    if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri())){
+                        LogUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
+                        HandleMethod handleMethod = handleMethodsMap.get(request.getUri());
+                        handleMethod.RequestDo(request,output);
+                        LogUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
+                    }else {
+                        //使用基础
+                        //返回 Response 给 output
+                        //当Response 为 null 的时候也可以处理
+                        Response response = new Response(request,output);
+                        response.sendStaticResource();
+                        LogUtils.debugLoger(randomThreadNum + "请求返回处理完成");
+                        LogUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
+                    }
                 } catch (IOException | WebServerException e) {
                     e.printStackTrace();
                 } finally {
@@ -285,5 +300,12 @@ public class SimpleHttpServer {
                 }
             }
         }).start();
+    }
+
+    public void addHandleMethod(HandleMethod handleMethod){
+        if (!useHandleMethod){
+            useHandleMethod = true;
+        }
+        handleMethodsMap.put(handleMethod.getUri(),handleMethod);
     }
 }
