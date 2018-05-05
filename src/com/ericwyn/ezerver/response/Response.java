@@ -72,7 +72,7 @@ public class Response {
     }
 
     public void closeStream() throws IOException {
-        this.requset.getInputStream().close();
+        this.requset.getBufferReader().close();
         this.getOutputStream().close();
         logUtils.debugLoger("关闭了 inputStream 和 outputStream");
 

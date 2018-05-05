@@ -62,8 +62,9 @@ Ezerver 是一个基于 socket 的简易 web 服务器，有了它，你只需�
  - `POST` 提交的 `Content-Type` 只支持
     - `multipart/form-data`
     - `application/x-www-form-urlencoded`
- - 只支持键值对形式的提交
- - 以`multipart/form-data`形式提交数据时候如果数据长度过长的话，可能会出现无法正确获取请求参数的错误（ BUG 之一，会在后续版本修复）
+    - `application/json`
+ - `multipart/form-data`或者`application/x-www-form-urlencoded` 只支持键值对形式提交
+ - 所有请求的提交数据都将使用 `UTF-8` 解码
 
 ## 对特定请求路径的自定义处理
 由于`Ezerver`还可以支持对特定访问路径的自定义处理，所以`Ezerver`除了作为一个静态网页服务器之外，还可以完成一些其他的功能，例如完成几个小小的API接口。

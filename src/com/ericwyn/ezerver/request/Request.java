@@ -4,11 +4,11 @@ import com.ericwyn.ezerver.SimpleHttpServer;
 import com.ericwyn.ezerver.expection.WebServerException;
 import com.ericwyn.ezerver.util.LogUtils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
-
-import sun.security.util.Length;
 
 /**
  *
@@ -46,42 +46,43 @@ public class Request {
     private String ContentTypeBoundray; //post 数据 分割线
     private String referer;
 
-    private InputStream inputStream;
+    private BufferedReader bufferReader;
 
     private HashMap<String,RequestParam> paramMap;
 
 
-    private Request(InputStream inputStream){
-        this.inputStream = inputStream;
+    private Request(BufferedReader bufferReader){
+        this.bufferReader = bufferReader;
     }
 
     public static Request parseRequset(InputStream inputStream) throws IOException, WebServerException {
-        byte[] bytes = new byte[inputStream.available()+100];
         StringBuilder inputStreamString = new StringBuilder();
-
-        //因为长度限制在了1024，所以当post请求报文长度超过1024的时候也无法接受就是了
+        //转成 UTF-8 避免乱码的问题
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
+        String line;
+        char[] bytes = new char[inputStream.available()+100];
         int readLength;
         try {
-            readLength = inputStream.read(bytes);
+            readLength = reader.read(bytes);
         }catch (Exception e){
             readLength =-1;
         }
-        for(int i = 0; i < readLength; i++) {
-            inputStreamString.append((char)bytes[i]);
-        }
+        inputStreamString.append(bytes,0,readLength);
+
         logUtils.debugLoger("\n收到的报文如下，总长度为"+inputStreamString.length());
         logUtils.debugLoger("----------------------------");
-        logUtils.debugLoger(inputStreamString.toString());
+        logUtils.debugLoger(new String(inputStreamString.toString().getBytes(),"UTF-8"));
         logUtils.debugLoger("----------------------------\n\n");
-        return parseRequset(inputStream,inputStreamString.toString());
+
+        return parseRequset(reader,inputStreamString.toString());
     }
 
-    private static Request parseRequset(InputStream inputStream,String socketInputSteamString) throws WebServerException{
+    private static Request parseRequset(BufferedReader reader,String socketInputSteamString) throws WebServerException{
         if (socketInputSteamString.length() == 0){
             return null;
         }
         String[] requestLine = socketInputSteamString.split("\n");
-        Request request=new Request(inputStream);
+        Request request=new Request(reader);
         String[] requestLine0 = requestLine[0].split(" ");
         if (requestLine0.length != 3){
             throw new WebServerException("Request 报文错误，无法解析首行请求行所以无法知道其请求方法");
@@ -369,12 +370,12 @@ public class Request {
         ContentTypeBoundray = contentTypeBoundray;
     }
 
-    public InputStream getInputStream() {
-        return inputStream;
+    public BufferedReader getBufferReader() {
+        return bufferReader;
     }
 
-    public void setInputStream(InputStream inputStream) {
-        this.inputStream = inputStream;
+    public void setBufferReader(BufferedReader bufferReader) {
+        this.bufferReader = bufferReader;
     }
 
     public HashMap<String, RequestParam> getParamMap() {
