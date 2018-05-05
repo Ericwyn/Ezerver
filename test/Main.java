@@ -25,11 +25,7 @@ public class Main {
                 System.out.println("请求方法为" + request.getMethodName());
                 System.out.println("json 参数为: "+paramMap.get(Request.JSON_PARAME_KEY).getValue());
 
-                response.getOutputStream().write("HTTP/1.1 200 OK\n".getBytes());
-                response.getOutputStream().write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
-                response.getOutputStream().write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
-                        + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
-                        + "</body>\n" + "</html>\n").getBytes());
+                response.responseJsonData("{\"page\":88,\"name\":\"Hello\",\"code\":10}");
 
                 response.closeStream();
             }

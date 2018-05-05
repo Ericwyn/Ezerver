@@ -121,7 +121,17 @@ Request 类的方法能够解析一般的`GET`请求和`POST`请求的键值对�
     });
 
 ### 以`JSON`格式返回数据
+`Ezerver` 也支持从服务器端以 `JSON` 格式返回数据，只需要在自定义的 HandleMethod 里面使用一行代码就可以了，由此你就可以使用`Ezerver`来开发一些简单的 API 了，使用示例如下，如果你希望通过 `/test` 返回 `JSON`数据的话，只要这样写就好了
 
+    HandleMethod testMethod = new HandleMethod("/test") {
+        @Override
+        public void RequestDo(Request request, Response response) throws IOException {
+        
+            response.responseJsonData("{\"page\":88,\"name\":\"Hello\",\"code\":10}");
+            
+            response.closeStream();
+        }
+    };
     
 
 
