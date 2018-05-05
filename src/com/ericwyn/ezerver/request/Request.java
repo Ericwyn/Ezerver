@@ -19,6 +19,8 @@ import sun.security.util.Length;
 public class Request {
     public static final int METHOD_GET = 1;
     public static final int METHOD_POST = 2;
+    public static final String JSON_PARAME_KEY = "1F7D23A29B8A1BC6681CFCDDFB1349FA";
+
 
     private final static int BUFFER_SIZE = 1024;
     private static LogUtils logUtils = SimpleHttpServer.logUtils;
@@ -44,17 +46,20 @@ public class Request {
     private String ContentTypeBoundray; //post 数据 分割线
     private String referer;
 
+    private InputStream inputStream;
 
     private HashMap<String,RequestParam> paramMap;
 
 
-    private Request(){
-
+    private Request(InputStream inputStream){
+        this.inputStream = inputStream;
     }
 
     public static Request parseRequset(InputStream inputStream) throws IOException, WebServerException {
-        byte[] bytes = new byte[BUFFER_SIZE];
+        byte[] bytes = new byte[inputStream.available()+100];
         StringBuilder inputStreamString = new StringBuilder();
+
+        //因为长度限制在了1024，所以当post请求报文长度超过1024的时候也无法接受就是了
         int readLength;
         try {
             readLength = inputStream.read(bytes);
@@ -68,15 +73,15 @@ public class Request {
         logUtils.debugLoger("----------------------------");
         logUtils.debugLoger(inputStreamString.toString());
         logUtils.debugLoger("----------------------------\n\n");
-        return parseRequset(inputStreamString.toString());
+        return parseRequset(inputStream,inputStreamString.toString());
     }
 
-    public static Request parseRequset(String socketInputSteamString) throws WebServerException{
+    private static Request parseRequset(InputStream inputStream,String socketInputSteamString) throws WebServerException{
         if (socketInputSteamString.length() == 0){
             return null;
         }
         String[] requestLine = socketInputSteamString.split("\n");
-        Request request=new Request();
+        Request request=new Request(inputStream);
         String[] requestLine0 = requestLine[0].split(" ");
         if (requestLine0.length != 3){
             throw new WebServerException("Request 报文错误，无法解析首行请求行所以无法知道其请求方法");
@@ -209,9 +214,12 @@ public class Request {
                 String[] temp2 = temp.split("=");
                 request.getParamMap().put(temp2[0],new RequestParam(temp2[0],temp2[1]));
             }
+        }else if (request.getContentType().contains("application/json")){
+            // json 数据文本
+            String paramTemp = requestGramTemp[1].replaceAll("\r\n","");
+            request.getParamMap().put(JSON_PARAME_KEY,new RequestParam(JSON_PARAME_KEY,paramTemp));
         }
         // post 还能有这几种
-        // application/json 判断
         // text/xml 判断
         // 目前还有bug，如果 ajax 提交 formData ，然后设置请求头 xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded"); 的话
         // 那么将无法正确处理 RequestParam
@@ -359,6 +367,14 @@ public class Request {
 
     public void setContentTypeBoundray(String contentTypeBoundray) {
         ContentTypeBoundray = contentTypeBoundray;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
+    public void setInputStream(InputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
     public HashMap<String, RequestParam> getParamMap() {

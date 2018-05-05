@@ -21,7 +21,7 @@ public abstract class HandleMethod {
 
     //回调接口，outputStream  是回调的东西
     // 参数 1 是 Request ， 参数 2 是outputStream，输出流
-    public void RequestDo(Request request, OutputStream outputStream) throws IOException {
+    public void RequestDo(Request request, Response response) throws IOException {
 
     }
 

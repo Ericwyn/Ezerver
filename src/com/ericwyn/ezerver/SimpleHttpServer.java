@@ -57,42 +57,44 @@ public class SimpleHttpServer {
     
     public static LogUtils logUtils = new LogUtils();
     
-    /**
-     * 简单的服务器测试
-     * 直接打印请求报文
-     *
-     * 单线程、阻塞、只能处理一个请求
-     *
-     * @throws IOException
-     * @throws WebServerException
-     */
-    public void simpleServerTest() throws IOException, WebServerException {
-        ServerSocket ss = new ServerSocket(SERVER_PORT);
-        System.out.println("运行在" + SERVER_PORT+"端口");
-        Socket socket = ss.accept();
-        System.out.println("收到一个请求");
-        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-        String buffer = null;
-        StringBuilder requsetLine = new StringBuilder();
-        while ((buffer = br.readLine())!=null && !buffer.equals("")){
-            requsetLine.append(buffer).append("\n");
-        }
-        System.out.println(requsetLine.toString());
-        Request request = Request.parseRequset(requsetLine.toString());
-        System.out.println("请求的 uri 是"+request.getUri());
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        bw.write("HTTP/1.1 200 OK\n");
-        bw.write("Content-Type: text/html; charset=UTF-8\n\n");
-        bw.write("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
-                + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
-                + "</body>\n" + "</html>\n");
-        bw.flush();
-        bw.close();
-        br.close();
-        socket.close();
-        ss.close();
-    }
+//    /**
+//     * 简单的服务器测试
+//     * 直接打印请求报文
+//     *
+//     * 单线程、阻塞、只能处理一个请求
+//     *
+//     * @throws IOException
+//     * @throws WebServerException
+//     */
+//    public void simpleServerTest() throws IOException, WebServerException {
+//        ServerSocket ss = new ServerSocket(SERVER_PORT);
+//        System.out.println("运行在" + SERVER_PORT+"端口");
+//        Socket socket = ss.accept();
+//        System.out.println("收到一个请求");
+//        InputStream in = socket.getInputStream();
+//
+//        String buffer = null;
+//        StringBuilder requsetLine = new StringBuilder();
+//        while ((buffer = in.readLine())!=null && !buffer.equals("")){
+//            requsetLine.append(buffer).append("\n");
+//        }
+//
+//
+//        System.out.println(requsetLine.toString());
+//        Request request = Request.parseRequset(in);
+//        System.out.println("请求的 uri 是"+request.getUri());
+//        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+//        bw.write("HTTP/1.1 200 OK\n");
+//        bw.write("Content-Type: text/html; charset=UTF-8\n\n");
+//        bw.write("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
+//                + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
+//                + "</body>\n" + "</html>\n");
+//        bw.flush();
+//        bw.close();
+//        in.close();
+//        socket.close();
+//        ss.close();
+//    }
 
     public SimpleHttpServer(){
 
@@ -178,16 +180,14 @@ public class SimpleHttpServer {
                     if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri().split("\\?")[0])){
                         logUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
                         HandleMethod handleMethod = handleMethodsMap.get(request.getUri().split("\\?")[0]);
-                        handleMethod.RequestDo(request,output);
+                        Response response = new Response(request,output);
+                        handleMethod.RequestDo(request,response);
                         logUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
                     }else {
-                        //使用基础
-                        //返回 Response 给 output
-                        //当Response 为 null 的时候也可以处理
                         Response response = new Response(request,output);
                         response.sendStaticResource();
                         logUtils.debugLoger(randomThreadNum + "请求返回处理完成");
-                        logUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
+                        response.closeStream();
                     }
                 } catch (IOException | WebServerException e) {
                     e.printStackTrace();
@@ -195,26 +195,12 @@ public class SimpleHttpServer {
                     try {
                         if (!socket.isClosed()){
                             socket.close();
+                            logUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    if (input!=null){
-                        try {
-                            input.close();
-                            logUtils.debugLoger(randomThreadNum + "请求的 socket input 已经关闭");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (output!=null){
-                        try {
-                            output.close();
-                            logUtils.debugLoger(randomThreadNum + "请求的 socket output 已经关闭");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    // input 和 output 的 close 都放到 Response 的 closeStream() 方法里面，在请求结束后全部关闭
                 }
 
             }

@@ -11,6 +11,5 @@ import java.io.IOException;
 public class SimpleTest {
     public static void main(String[] args) throws IOException, WebServerException {
         SimpleHttpServer server = new SimpleHttpServer();
-        server.simpleServerTest();
     }
 }

@@ -67,4 +67,14 @@ public class Response {
 
     }
 
+    public OutputStream getOutputStream() {
+        return output;
+    }
+
+    public void closeStream() throws IOException {
+        this.requset.getInputStream().close();
+        this.getOutputStream().close();
+        logUtils.debugLoger("关闭了 inputStream 和 outputStream");
+
+    }
 }

@@ -65,7 +65,6 @@ Ezerver 是一个基于 socket 的简易 web 服务器，有了它，你只需�
  - 只支持键值对形式的提交
  - 以`multipart/form-data`形式提交数据时候如果数据长度过长的话，可能会出现无法正确获取请求参数的错误（ BUG 之一，会在后续版本修复）
 
-
 ## 对特定请求路径的自定义处理
 由于`Ezerver`还可以支持对特定访问路径的自定义处理，所以`Ezerver`除了作为一个静态网页服务器之外，还可以完成一些其他的功能，例如完成几个小小的API接口。
 
@@ -90,7 +89,33 @@ Ezerver 是一个基于 socket 的简易 web 服务器，有了它，你只需�
         }
     });
 
-当前版本 `Ezerver` 尚未加入对 `json`数据的支持（不支持带有 `json` 数据的`POST`的请求，也无法方便的直接以 `json` 格式返回 Response），后续的更新当中会加入这个功能
+## 对 `JSON` 数据的支持
+### 获取请求中的`JSON`数据
+Request 类的方法能够解析一般的`GET`请求和`POST`请求的键值对参数，但是如果是`JSON`数据格式的`POST`请求的话，`Ezerver`默认将不会去解析参数数据，而是会把整段的`JSON`参数存储为一个 `RequestParam`，在 `Request`的 `ParamMap` 里面，`key`为 `Request.JSON_PARAME_KEY`。你可以通过`key`获取 `Request` 里面的`JSON`数据，并通过其他的库（如`Jackson` 或者 `fastjson` 来完成对 `JSON` 的解析），例如下面的方法，将接受并获取来自`/test` 的 `JSON` 请求数据
+
+    server.addHandleMethod(new HandleMethod("/test") {
+        @Override
+        public void RequestDo(Request request, OutputStream outputStream) throws IOException {
+        
+            HashMap<String, RequestParam> paramMap = request.getParamMap();
+            System.out.println("请求的uri为"+request.getUri());
+            System.out.println("请求方法为" + request.getMethodName());
+            System.out.println("json 数据为: "+paramMap.get(Request.JSON_PARAME_KEY).getValue());     
+            
+            outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+            outputStream.write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
+            outputStream.write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
+                    + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
+                    + "</body>\n" + "</html>\n").getBytes());
+            outputStream.close();
+        }
+        
+    });
+
+### 以`JSON`格式返回数据
+
+    
+
 
 ## 调试帮助
 `Ezerver`主要有下面两个方法帮助调试
