@@ -69,24 +69,28 @@ Ezerver 是一个基于 socket 的简易 web 服务器，有了它，你只需�
 ## 对特定请求路径的自定义处理
 由于`Ezerver`还可以支持对特定访问路径的自定义处理，所以`Ezerver`除了作为一个静态网页服务器之外，还可以完成一些其他的功能，例如完成几个小小的API接口。
 
-该功能主要依赖 `SimpleHttpServer.addHandleMethod(HandleMethod handleMethod)` 方法完成
+该功能主要依赖 `SimpleHttpServer.addHandleMethod(HandleMethod handleMethod)` 方法完成，通过重写匿名内部类里面的 `RequestDo(Request request, Response response)` 来实现功能
 
-如果你想要实现对 `/test` 路径访问请求的自定义处理，那么只需要像下面这样就可以了
+例如如果你想要实现对 `/test` 路径访问请求的自定义处理，那么只需要像下面这样就可以了
 
     server.addHandleMethod(new HandleMethod("/test") {
         @Override
-        public void RequestDo(Request request, OutputStream outputStream) throws IOException {
+        public void RequestDo(Request request, Response response) throws IOException {
+            // 如果要执行静态请求的话，只需要调用下面的方法就好了
+            // 这样的话效果就和默认处理方式一样了
+
             HashMap<String, RequestParam> paramMap = request.getParamMap();
             System.out.println("请求的uri为"+request.getUri());
             System.out.println("param数量 " + paramMap.size());
             System.out.println("请求方法为" + request.getMethodName());
 
-            outputStream.write("HTTP/1.1 200 OK\n".getBytes());
-            outputStream.write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
-            outputStream.write(("<html>\n" + "<head>\n" + "    <title>Test</title>\n"
+            response.getOutputStream().write("HTTP/1.1 200 OK\n".getBytes());
+            response.getOutputStream().write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
+            response.getOutputStream().write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
                     + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
                     + "</body>\n" + "</html>\n").getBytes());
-            outputStream.close();
+
+            response.closeStream();
         }
     });
 
@@ -96,21 +100,24 @@ Request 类的方法能够解析一般的`GET`请求和`POST`请求的键值对�
 
     server.addHandleMethod(new HandleMethod("/test") {
         @Override
-        public void RequestDo(Request request, OutputStream outputStream) throws IOException {
-        
+        public void RequestDo(Request request, Response response) throws IOException {
+            // 如果要执行静态请求的话，只需要调用下面的方法就好了
+            // 这样的话效果就和默认处理方式一样了
+
             HashMap<String, RequestParam> paramMap = request.getParamMap();
             System.out.println("请求的uri为"+request.getUri());
+            System.out.println("param数量 " + paramMap.size());
             System.out.println("请求方法为" + request.getMethodName());
-            System.out.println("json 数据为: "+paramMap.get(Request.JSON_PARAME_KEY).getValue());     
-            
-            outputStream.write("HTTP/1.1 200 OK\n".getBytes());
-            outputStream.write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
-            outputStream.write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
+            System.out.println("json 参数为: "+paramMap.get(Request.JSON_PARAME_KEY).getValue());
+
+            response.getOutputStream().write("HTTP/1.1 200 OK\n".getBytes());
+            response.getOutputStream().write("Content-Type: text/html; charset=UTF-8\n\n".getBytes());
+            response.getOutputStream().write(("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
                     + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
                     + "</body>\n" + "</html>\n").getBytes());
-            outputStream.close();
+
+            response.closeStream();
         }
-        
     });
 
 ### 以`JSON`格式返回数据
