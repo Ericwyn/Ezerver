@@ -4,7 +4,13 @@ import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.request.RequestParam;
 import com.ericwyn.ezerver.response.Response;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -23,9 +29,9 @@ public class Main {
                 System.out.println("请求的uri为"+request.getUri());
                 System.out.println("param数量 " + paramMap.size());
                 System.out.println("请求方法为" + request.getMethodName());
-                System.out.println("json 参数为: "+paramMap.get(Request.JSON_PARAME_KEY).getValue());
+                System.out.println("json 参数为: "+request.getJSONParamString());
 
-                response.responseJsonData("{\"page\":88,\"name\":\"Hello\",\"code\":10}");
+                response.sendFileStream(new File("webroot/gapp2.zip"));
 
                 response.closeStream();
             }
@@ -56,6 +62,9 @@ TODO
  1, Build 模式 创建 SimpleHttpServer
  2，重新设计 Response
  3，完善对 POST 的支持，对 JSON 的支持
+
+ /// URI Encode！！！！
+
  4，发布！
  5，利用 Ezerver 重写 Leablog 后端
 

@@ -5,8 +5,11 @@ import com.ericwyn.ezerver.SimpleHttpServer;
 import com.ericwyn.ezerver.util.LogUtils;
 import com.ericwyn.ezerver.util.ResponseUtil;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
@@ -31,16 +34,16 @@ import java.net.SocketException;
  * Created by Ericwyn on 18-5-2.
  */
 public class Response {
-    private Request requset;
 
     private static final int BUFFER_SIZE = 2048;
     private static LogUtils logUtils = SimpleHttpServer.logUtils;
 
+    private Request requset;
     private OutputStream output ;
 
-    public Response(Request request,OutputStream output){
+    public Response(Request request) throws IOException {
         this.requset = request;
-        this.output = output;
+        this.output = request.getSocket().getOutputStream();
     }
 
     public void sendStaticResource() throws IOException{
@@ -61,13 +64,11 @@ public class Response {
                     //输出文件信息
                     sendResponseBody(file);
                 }else {
-                    // 输出头部响应行
                     sendResponseLine(StateCode.CODE_404);
-                    //输出content-type
                     sendResponseHeader(ContentType.TEXT_HTML);
-                    //输出文件信息
                     sendResponseBody(ErrorMsg.ERR_404_MSG);
                 }
+
             }
 
         }catch (SocketException e){
@@ -88,27 +89,38 @@ public class Response {
     }
 
     //发送文件形式的 ResponseBody
+    //不判断文件是否存在
     private void sendResponseBody(File file) throws IOException {
-        FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int readLength;
-        while ((readLength = fis.read(buffer,0,BUFFER_SIZE))>0){
-            output.write(buffer,0,readLength);
+//        FileInputStream fis = new FileInputStream(file);
+//        byte[] buffer = new byte[fis.available()];
+//        int readLength;
+//        while ((readLength = fis.read(buffer,0,BUFFER_SIZE))>0){
+//            output.write(buffer,0,readLength);
+//            output.flush();
+//        }
+//        output.write(buffer,0,readLength);
+        //临时的文件读取流要在这里关闭
+//        fis.close();
+
+//        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+//        byte[] bytes = new byte[bis.available()];
+//        int read = bis.read(bytes);
+//        output.write(bytes,0,read);
+//        bis.close();
+
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+        byte[] bytes = new byte[2048];
+        int read;
+        while ((read=bis.read(bytes))!=-1){
+            output.write(bytes,0,read);
             output.flush();
         }
-        //临时的文件读取流要在这里关闭
-        fis.close();
+        bis.close();
     }
 
     //直接发送文字形式的 ResponseBody
     private void sendResponseBody(String bodyStr) throws IOException {
         output.write(bodyStr.getBytes());
-    }
-
-    public void closeStream() throws IOException {
-        this.requset.getBufferReader().close();
-        this.getOutputStream().close();
-        logUtils.debugLoger("关闭了 inputStream 和 outputStream");
     }
 
     //用户返回 json 数据
@@ -119,12 +131,23 @@ public class Response {
     }
 
     //用户返回文件下载
-    public void sendFileStream(String fileName) throws IOException {
+    //文件不处在时候返回404
+    public void sendFileStream(File file) throws IOException {
         sendResponseLine(StateCode.CODE_200);
         sendResponseHeader(ContentType.APPLICTION_OCTET_STREAM);
-        sendResponseBody(fileName);
+        if (file.exists()){
+            logUtils.debugLoger("请求文件： "+file.getAbsolutePath()+" 存在");
+            sendResponseBody(file);
+        }else {
+            sendResponseBody(ErrorMsg.ERR_404_MSG);
+        }
     }
 
-    //
-
+    public void closeStream() throws IOException {
+        this.requset.getBufferReader().close();
+        this.getOutputStream().close();
+        this.requset.getSocket().close();
+        this.requset = null;
+        logUtils.debugLoger("关闭了 inputStream 和 outputStream 和请求的 Socket 连接");
+    }
 }

@@ -3,6 +3,7 @@ package com.ericwyn.ezerver;
 import com.ericwyn.ezerver.expection.WebServerException;
 import com.ericwyn.ezerver.handle.HandleMethod;
 import com.ericwyn.ezerver.request.Request;
+import com.ericwyn.ezerver.request.RequestParseUtil;
 import com.ericwyn.ezerver.response.Response;
 import com.ericwyn.ezerver.util.LogUtils;
 
@@ -195,14 +196,12 @@ public class SimpleHttpServer {
         Thread temp = new Thread(new Runnable() {
             @Override
             public void run() {
-                InputStream input = null;
-                OutputStream output = null;
                 try {
                     //获取 socket 的 input 和 output
-                    input = socket.getInputStream();
-                    output = socket.getOutputStream();
+//                    input = socket.getInputStream();
+//                    output = socket.getOutputStream();
                     //解析 socket 里面的 Requset 请求
-                    Request request = Request.parseRequset(input);
+                    Request request = RequestParseUtil.parseRequset(socket);
                     // 当 useHandleMethod 并且拥有对这个 uri 请求路径的处理方法的时候才处理
                     // 不然全部按照静态资源请求处理
                     if (request == null){
@@ -211,11 +210,11 @@ public class SimpleHttpServer {
                     if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri().split("\\?")[0])){
                         logUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
                         HandleMethod handleMethod = handleMethodsMap.get(request.getUri().split("\\?")[0]);
-                        Response response = new Response(request,output);
+                        Response response = new Response(request);
                         handleMethod.RequestDo(request,response);
                         logUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
                     }else {
-                        Response response = new Response(request,output);
+                        Response response = new Response(request);
                         response.sendStaticResource();
                         logUtils.debugLoger(randomThreadNum + "请求返回处理完成");
                         response.closeStream();
@@ -223,6 +222,7 @@ public class SimpleHttpServer {
                 } catch (IOException | WebServerException e) {
                     e.printStackTrace();
                 } finally {
+                    // input 和 output 以及 socket 的 close 都放到 Response 的 closeStream() 方法里面，在请求结束后全部关闭
                     try {
                         if (!socket.isClosed()){
                             socket.close();
@@ -231,7 +231,6 @@ public class SimpleHttpServer {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    // input 和 output 的 close 都放到 Response 的 closeStream() 方法里面，在请求结束后全部关闭
                 }
 
             }

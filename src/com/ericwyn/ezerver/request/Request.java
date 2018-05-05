@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.HashMap;
 
 /**
@@ -19,12 +20,9 @@ import java.util.HashMap;
 public class Request {
     public static final int METHOD_GET = 1;
     public static final int METHOD_POST = 2;
-    public static final String JSON_PARAME_KEY = "1F7D23A29B8A1BC6681CFCDDFB1349FA";
 
 
-    private final static int BUFFER_SIZE = 1024;
-    private static LogUtils logUtils = SimpleHttpServer.logUtils;
-
+    // 通用 报文 Header
     private int method;
     private String uri;
     private String version;
@@ -39,198 +37,44 @@ public class Request {
     private String cookie;
     private String UpgradeInsecureRequests;
 
-    // POST 报文还带有
+    // POST 报文特殊 Header
     private long ContentLength;   //content 长度
     private String Origin;          //来源
     private String contentType;
     private String ContentTypeBoundray; //post 数据 分割线
     private String referer;
 
+    //socket 的 inputStream 的包装
     private BufferedReader bufferReader;
 
+    //存储参数
     private HashMap<String,RequestParam> paramMap;
 
+    //存储 json 数据
+    private String JSONParamString = null;
 
-    private Request(BufferedReader bufferReader){
+    private Socket socket;
+
+    //设置该 Request 来自的 Socket 和读取的 bufferReader
+    // bufferReader 为了解决请求报文中文乱码的问题
+    public Request(Socket socket, BufferedReader bufferReader){
+        this.socket = socket;
         this.bufferReader = bufferReader;
     }
 
-    public static Request parseRequset(InputStream inputStream) throws IOException, WebServerException {
-        StringBuilder inputStreamString = new StringBuilder();
-        //转成 UTF-8 避免乱码的问题
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
-        String line;
-        char[] bytes = new char[inputStream.available()+100];
-        int readLength;
-        try {
-            readLength = reader.read(bytes);
-        }catch (Exception e){
-            readLength =-1;
-        }
-        inputStreamString.append(bytes,0,readLength);
-
-        logUtils.debugLoger("\n收到的报文如下，总长度为"+inputStreamString.length());
-        logUtils.debugLoger("----------------------------");
-        logUtils.debugLoger(new String(inputStreamString.toString().getBytes(),"UTF-8"));
-        logUtils.debugLoger("----------------------------\n\n");
-
-        return parseRequset(reader,inputStreamString.toString());
+    public String getJSONParamString(){
+        return this.JSONParamString;
     }
 
-    private static Request parseRequset(BufferedReader reader,String socketInputSteamString) throws WebServerException{
-        if (socketInputSteamString.length() == 0){
-            return null;
-        }
-        String[] requestLine = socketInputSteamString.split("\n");
-        Request request=new Request(reader);
-        String[] requestLine0 = requestLine[0].split(" ");
-        if (requestLine0.length != 3){
-            throw new WebServerException("Request 报文错误，无法解析首行请求行所以无法知道其请求方法");
-        }else {
-            request.setUri(requestLine0[1]);
-            request.setVersion(requestLine0[2]);
-            if (requestLine0[0].equals("GET")){
-                request.method = METHOD_GET;
-                parseGET(request,requestLine);
-            }else if (requestLine0[0].equals("POST")){
-                request.method = METHOD_POST;
-                parsePOST(request,socketInputSteamString);
-            }
-        }
-        return request;
-    }
-
-    //解析 GET 报文
-    private static void parseGET(Request request,String[] requestLine){
-        for (int i=1;i<requestLine.length;i++){
-            if (requestLine[i].startsWith("Host: ")){
-                request.setHost(requestLine[i].replace("Host: ",""));
-            }else if (requestLine[i].startsWith("Connection: ")){
-                request.setConnection(requestLine[i].replace("Connection: ",""));
-            }else if (requestLine[i].startsWith("Pragma: ")){
-                request.setPragma(requestLine[i].replace("Pragma: ",""));
-            }else if (requestLine[i].startsWith("Cache-Control: ")){
-                request.setCacheControl(requestLine[i].replace("Cache-Control: ",""));
-            }else if (requestLine[i].startsWith("Upgrade-Insecure-Requests: ")){
-                request.setUpgradeInsecureRequests(requestLine[i].replace("Upgrade-Insecure-Requests: ",""));
-            }else if (requestLine[i].startsWith("User-Agent: ")){
-                request.setUserAgent(requestLine[i].replace("User-Agent: ",""));
-            }else if (requestLine[i].startsWith("Accept: ")){
-                request.setAccept(requestLine[i].replace("Accept: ",""));
-            }else if (requestLine[i].startsWith("Accept-Encoding: ")){
-                request.setAcceptEncoding(requestLine[i].replace("Accept-Encoding: ",""));
-            }else if (requestLine[i].startsWith("Accept-Language: ")){
-                request.setAcceptLanguage(requestLine[i].replace("Accept-Language: ",""));
-            }else if (requestLine[i].startsWith("Cookie: ")){
-                request.setCookie(requestLine[i].replace("Cookie: ",""));
-            }
-        }
-        //解析参数
-        if (request.getUri().contains("?")){
-            String[] split = (request.getUri().split("\\?")[1]).split("&");
-            for (String temp:split){
-                String[] temp2 = temp.split("=");
-                request.getParamMap().put(temp2[0],new RequestParam(temp2[0],temp2[1]));
-            }
-        }
-    }
-
-    //解析 POST 报文
-    private static void parsePOST(Request request,String socketInputSteamString){
-        String splitTemp = "%12hf81hf893%"; //替换掉 body 与header 的\r\n\r\n
-        socketInputSteamString = socketInputSteamString.replaceFirst("\r\n\r\n",splitTemp);
-        String[] requestGramTemp = socketInputSteamString.split(splitTemp);
-
-        String[] requestLine = requestGramTemp[0].split("\n");
-        for (int i=1;i<requestLine.length;i++){
-            if (requestLine[i].startsWith("Host: ")){
-                request.setHost(requestLine[i].replace("Host: ",""));
-            }else if (requestLine[i].startsWith("Connection: ")){
-                request.setConnection(requestLine[i].replace("Connection: ",""));
-            }else if (requestLine[i].startsWith("Pragma: ")){
-                request.setPragma(requestLine[i].replace("Pragma: ",""));
-            }else if (requestLine[i].startsWith("Cache-Control: ")){
-                request.setCacheControl(requestLine[i].replace("Cache-Control: ",""));
-            }else if (requestLine[i].startsWith("Upgrade-Insecure-Requests: ")){
-                request.setUpgradeInsecureRequests(requestLine[i].replace("Upgrade-Insecure-Requests: ",""));
-            }else if (requestLine[i].startsWith("User-Agent: ")){
-                request.setUserAgent(requestLine[i].replace("User-Agent: ",""));
-            }else if (requestLine[i].startsWith("Accept: ")){
-                request.setAccept(requestLine[i].replace("Accept: ",""));
-            }else if (requestLine[i].startsWith("Accept-Encoding: ")){
-                request.setAcceptEncoding(requestLine[i].replace("Accept-Encoding: ",""));
-            }else if (requestLine[i].startsWith("Accept-Language: ")){
-                request.setAcceptLanguage(requestLine[i].replace("Accept-Language: ",""));
-            }else if (requestLine[i].startsWith("Cookie: ")){
-                request.setCookie(requestLine[i].replace("Cookie: ",""));
-            }else if (requestLine[i].startsWith("Content-Length: ")){
-                request.setContentLength(Long.parseLong(requestLine[i].replace("Content-Length: ","").trim()));
-            }else if (requestLine[i].startsWith("Origin: ")){
-                request.setOrigin(requestLine[i].replace("Origin: ",""));
-            }else if (requestLine[i].startsWith("Content-Type: ")){
-                // 分割 Content-Type: multipart/form-data; boundary=----WebKitFormBoundarypMRuRv2ZaPFS7dUm
-                String contentTypeTemp = requestLine[i].replace("Content-Type: ","");
-                String[] split = contentTypeTemp.split(";");
-                request.setContentType(split[0]);
-                for (int k=1;k<split.length;k++){
-                    if (split[k].contains("boundary=")){
-                        request.setContentTypeBoundray(split[k].trim().replace("\r","").replace("\n","").split("=")[1]);
-                    }
-                }
-            }else if (requestLine[i].startsWith("Referer: ")){
-                request.setReferer(requestLine[i].replace("Referer: ",""));
-            }
-        }
-        if (request.getContentType().contains("multipart/form-data")){
-            String paramTemp = requestGramTemp[1].replaceAll("\r\n\r\n","\r\n");
-            //需要去除末尾的两个 -- ，然后每个分割线前面也还有 --,
-            //具体参考 http://blog.sina.com.cn/s/blog_3e3fcadd0100y61s.html
-            String[] paramListTemp = paramTemp.substring(0,paramTemp.length()-2).split("--"+request.getContentTypeBoundray());
-            for (String aParamListTemp : paramListTemp) {
-                if (aParamListTemp.replaceAll("\n","").replaceAll("\r","").trim().equals("")){
-                    continue;
-                }
-                String[] temp2 = aParamListTemp.split("\r\n");
-                String[] keyTemp = temp2[1].split(";");
-                RequestParam param = new RequestParam();
-                for (String aKeyTemp : keyTemp) {
-                    if (aKeyTemp.equals("")){
-                        continue;
-                    }
-                    if (aKeyTemp.contains("Content-Disposition: ")) {
-                        param.setContentDisposition(aKeyTemp.replace("Content-Disposition: ", "").trim());
-                    }
-                    if (aKeyTemp.contains("name=\"")) {
-                        String key = aKeyTemp.replace("name=\"", "").trim();
-                        param.setKey(key.substring(0, key.length() - 1));  //去掉前后的 双引号
-                    }
-                }
-                param.setValue(temp2[2]);
-                request.getParamMap().put(param.getKey(),param);
-            }
-        }else if (request.getContentType().contains("application/x-www-form-urlencoded")){
-            String paramTemp = requestGramTemp[1].replaceAll("\r\n","");
-            String[] split = paramTemp.split("&");
-            for (String temp:split){
-                String[] temp2 = temp.split("=");
-                request.getParamMap().put(temp2[0],new RequestParam(temp2[0],temp2[1]));
-            }
-        }else if (request.getContentType().contains("application/json")){
-            // json 数据文本
-            String paramTemp = requestGramTemp[1].replaceAll("\r\n","");
-            request.getParamMap().put(JSON_PARAME_KEY,new RequestParam(JSON_PARAME_KEY,paramTemp));
-        }
-        // post 还能有这几种
-        // text/xml 判断
-        // 目前还有bug，如果 ajax 提交 formData ，然后设置请求头 xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded"); 的话
-        // 那么将无法正确处理 RequestParam
+    public void setJSONParamString(String JSONParamString) {
+        this.JSONParamString = JSONParamString;
     }
 
     public int getMethod() {
         return method;
     }
 
-    private void setMethod(int method) {
+    protected void setMethod(int method) {
         this.method = method;
     }
 
@@ -238,7 +82,7 @@ public class Request {
         return uri;
     }
 
-    private void setUri(String uri) {
+    void setUri(String uri) {
         this.uri = uri;
     }
 
@@ -246,7 +90,7 @@ public class Request {
         return version;
     }
 
-    private void setVersion(String version) {
+    void setVersion(String version) {
         this.version = version;
     }
 
@@ -254,7 +98,7 @@ public class Request {
         return host;
     }
 
-    private void setHost(String host) {
+    protected void setHost(String host) {
         this.host = host;
     }
 
@@ -262,7 +106,7 @@ public class Request {
         return connection;
     }
 
-    private void setConnection(String connection) {
+    protected void setConnection(String connection) {
         this.connection = connection;
     }
 
@@ -270,7 +114,7 @@ public class Request {
         return cacheControl;
     }
 
-    private void setCacheControl(String cacheControl) {
+    protected void setCacheControl(String cacheControl) {
         this.cacheControl = cacheControl;
     }
 
@@ -278,7 +122,7 @@ public class Request {
         return userAgent;
     }
 
-    private void setUserAgent(String userAgent) {
+    protected void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }
 
@@ -286,7 +130,7 @@ public class Request {
         return accept;
     }
 
-    private void setAccept(String accept) {
+    protected void setAccept(String accept) {
         this.accept = accept;
     }
 
@@ -294,7 +138,7 @@ public class Request {
         return acceptEncoding;
     }
 
-    private void setAcceptEncoding(String acceptEncoding) {
+    protected void setAcceptEncoding(String acceptEncoding) {
         this.acceptEncoding = acceptEncoding;
     }
 
@@ -302,7 +146,7 @@ public class Request {
         return acceptLanguage;
     }
 
-    private void setAcceptLanguage(String acceptLanguage) {
+    protected void setAcceptLanguage(String acceptLanguage) {
         this.acceptLanguage = acceptLanguage;
     }
 
@@ -310,7 +154,7 @@ public class Request {
         return cookie;
     }
 
-    private void setCookie(String cookie) {
+    protected void setCookie(String cookie) {
         this.cookie = cookie;
     }
 
@@ -318,7 +162,7 @@ public class Request {
         return Pragma;
     }
 
-    private void setPragma(String pragma) {
+    protected void setPragma(String pragma) {
         Pragma = pragma;
     }
 
@@ -326,7 +170,7 @@ public class Request {
         return UpgradeInsecureRequests;
     }
 
-    private void setUpgradeInsecureRequests(String upgradeInsecureRequests) {
+    protected void setUpgradeInsecureRequests(String upgradeInsecureRequests) {
         UpgradeInsecureRequests = upgradeInsecureRequests;
     }
 
@@ -334,7 +178,7 @@ public class Request {
         return ContentLength;
     }
 
-    private void setContentLength(long contentLength) {
+    protected void setContentLength(long contentLength) {
         ContentLength = contentLength;
     }
 
@@ -342,7 +186,7 @@ public class Request {
         return Origin;
     }
 
-    private void setOrigin(String origin) {
+    protected void setOrigin(String origin) {
         Origin = origin;
     }
 
@@ -350,7 +194,7 @@ public class Request {
         return contentType;
     }
 
-    private void setContentType(String contentType) {
+    protected void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
@@ -358,7 +202,7 @@ public class Request {
         return referer;
     }
 
-    private void setReferer(String referer) {
+    protected void setReferer(String referer) {
         this.referer = referer;
     }
 
@@ -376,6 +220,10 @@ public class Request {
 
     public void setBufferReader(BufferedReader bufferReader) {
         this.bufferReader = bufferReader;
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public HashMap<String, RequestParam> getParamMap() {
