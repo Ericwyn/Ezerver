@@ -5,11 +5,10 @@ import com.ericwyn.ezerver.handle.HandleMethod;
 import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.request.RequestParseUtil;
 import com.ericwyn.ezerver.response.Response;
-import com.ericwyn.ezerver.util.LogUtils;
+import com.ericwyn.ezerver.util.LogUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,109 +17,112 @@ import java.util.HashMap;
 
 /**
  *
- * 简单 http server 的实现
- *
- * 参考 https://blog.csdn.net/martinwangjun/article/details/77659336
- *
- * 简单版本，单线程，只能处理1个请求，返回的只是 hello test server！ 页面而已
- *
- * http 协议返回
+ * Ezerver 主类
  *
  * Created by Ericwyn on 18-5-1.
  */
 public class SimpleHttpServer {
-    //默认 9090 端口
+    //默认的运行端口为 9090 端口
     private static int SERVER_PORT = 9090;
-    private int newPort = -1;   //用户自定义端口
+
+    //用户自定义端口
+    private int newPort = -1;
+
+    //默认的 WEBROOT 文件夹，在运行目录下的 webroot 文件夹
     public  static String WEB_ROOT = System.getProperty("user.dir")+ File.separator + "webroot";
-    private String newWebRoot;  //用户自定义根目录
+
+    //用户自定义根目录
+    private String newWebRoot;
+
+    //服务的核心 ServerSocket，负责监听所有的 Socket 请求
     private ServerSocket serverSocket = null;
 
-    //这个 flag 设定是否 ServerSocket 继续执行
+    //设定 ServerSocket 是否继续执行，为 false 时候，ServerSocket 将会 close，只能由 close() 方法设置
     private boolean continueAcceptFlag = true;
 
+    //核心 ServerSocket 运行的线程
     private Thread awaitThread = null;
 
+    //线程 List，存储当前 Ezerver 运行的所有线程
     private ArrayList<Thread> threadListForPrint;
 
-    //设定是否自动打印线程情况
+    //flag 设定是否自动打印线程情况
     private boolean allowPrintThreadList = false;
 
     //是否有用户自定义的 handleMethod 的flag
     private boolean useHandleMethod = false;
 
-    //自定义的各种处理方法
+    //自定义的各种处理方法，处理对特定 URI 的访问请求
     private HashMap<String,HandleMethod> handleMethodsMap = new HashMap<>();
-    
-    public static LogUtils logUtils = new LogUtils();
-    
-//    /**
-//     * 简单的服务器测试
-//     * 直接打印请求报文
-//     *
-//     * 单线程、阻塞、只能处理一个请求
-//     *
-//     * @throws IOException
-//     * @throws WebServerException
-//     */
-//    public void simpleServerTest() throws IOException, WebServerException {
-//        ServerSocket ss = new ServerSocket(SERVER_PORT);
-//        System.out.println("运行在" + SERVER_PORT+"端口");
-//        Socket socket = ss.accept();
-//        System.out.println("收到一个请求");
-//        InputStream in = socket.getInputStream();
-//
-//        String buffer = null;
-//        StringBuilder requsetLine = new StringBuilder();
-//        while ((buffer = in.readLine())!=null && !buffer.equals("")){
-//            requsetLine.append(buffer).append("\n");
-//        }
-//
-//
-//        System.out.println(requsetLine.toString());
-//        Request request = Request.parseRequset(in);
-//        System.out.println("请求的 uri 是"+request.getUri());
-//        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-//        bw.write("HTTP/1.1 200 OK\n");
-//        bw.write("Content-Type: text/html; charset=UTF-8\n\n");
-//        bw.write("<html>\n" + "<head>\n" + "    <title>first page</title>\n"
-//                + "</head>\n" + "<body>\n" + "    <h1>Hello Web Server!</h1>\n"
-//                + "</body>\n" + "</html>\n");
-//        bw.flush();
-//        bw.close();
-//        in.close();
-//        socket.close();
-//        ss.close();
-//    }
+
+    //日志工具，与 Ezerver 其他工具类共享
+    public static LogUtil logUtil = new LogUtil();
 
     private SimpleHttpServer(){}
 
+    /**
+     *
+     * SimpleHttpServer 只能使用该 Builder 创建
+     */
     public static class Builder{
         private SimpleHttpServer server;
         public Builder(){
             server=new SimpleHttpServer();
         }
 
+        /**
+         * 设定 SimpleHttpServer 的运行端口
+         *
+         * @param serverPort
+         * @return
+         */
         public Builder setServerPort(int serverPort){
             this.server.setServerPort(serverPort);
             return this;
         }
 
+        /**
+         * 设定 WEBROOT 目录
+         *
+         * @param webRoot
+         * @return
+         */
         public Builder setWebRoot(String webRoot){
             this.server.setWebRoot(webRoot);
             return this;
         }
 
+        /**
+         * 是否使用 Debug 模式
+         * 调用该方法的话将会开启 Debug 模式，通过 LogUtil 打印 Ezerver 运行情况
+         * 打印内容包括各个请求报文的报文详情
+         *
+         * 默认的话 LogUtil 只会输出 Error 级别的信息
+         *
+         * @return
+         */
         public Builder allowDebug(){
             this.server.debug();
             return this;
         }
 
+        /**
+         * 是否允许打印 Ezerver 的线程情况
+         * 调用该方法后，SimpleHttpServer 在开启后会每隔一段时间就打印一遍 ThreadList 的情况
+         *
+         * @return
+         */
         public Builder allowPrintThreadList(){
             this.server.allowPrintThreadList();
             return this;
         }
 
+        /**
+         * 添加对特定路径请求的自定义处理方法
+         *
+         * @param handleMethod
+         * @return
+         */
         public Builder addHandleMethod(HandleMethod handleMethod){
             this.server.addHandleMethod(handleMethod);
             return this;
@@ -140,6 +142,24 @@ public class SimpleHttpServer {
         this.newWebRoot = webRoot;
     }
 
+    /**
+     * 开启 SimpleHttpServer 服务
+     * 如果 WEBROOT 目录不存在的话，将会直接退出
+     *
+     * 开启 await 线程，作为 核心 ServerSocket 的运行线程，不断监听从 SERVER_PORT 端口发来的 socket 请求
+     * 每收到一个 socket 请求，就将它分发给一个新的子线程处理
+     *
+     * 因为核心 ServerSocket 的 accept 方法会一直阻塞，所以 await 线程也会一直存在于后台
+     * 除非在某次请求之后发现 continueAcceptFlag 变为了 false，那么 close ServerSocket
+     * 并且会关闭 线程情况打印
+     *
+     * 该方法调用之后，也会判定是否需要开启 线程情况打印
+     * 如果 线程情况打印 allowPrintThreadList 被设置为 true 的话
+     *
+     * 那么 核心 ServerSocket 线程，以及之后所有的对 Socket 处理的子线程都将会被加入到 ThreadList 里面
+     *
+     * @throws WebServerException
+     */
     public void start() throws WebServerException {
         if (newWebRoot!=null){
             WEB_ROOT = newWebRoot;
@@ -153,7 +173,7 @@ public class SimpleHttpServer {
                 SERVER_PORT = newPort;
             }
             serverSocket = new ServerSocket(SERVER_PORT);
-            logUtils.debugLoger("新建 ServerSocket 运行在 "+SERVER_PORT+" 端口");
+            logUtil.debugLoger("新建 ServerSocket 运行在 "+SERVER_PORT+" 端口");
         }catch (Exception e){
             e.printStackTrace();
             throw new WebServerException("无法新建 ServerSocket ，有可能端口被占用，发生 IOE ：" + e.getMessage());
@@ -168,18 +188,30 @@ public class SimpleHttpServer {
                         if (continueAcceptFlag){
                             startSocketThread(socket);
                         }else {
+                            if (allowPrintThreadList){
+                                for (Thread thread:threadListForPrint){
+                                    if (thread.isAlive()){
+                                        thread.interrupt();
+                                    }
+                                }
+                                threadListForPrint.clear();
+                                threadListForPrint = null;
+                            }
+                            if (!serverSocket.isClosed()){
+                                serverSocket.close();
+                            }
                             break;
                         }
                     }catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                logUtils.usuallyPrintLogerln("awaitThread 监听到 Flag 以为 false 所以退出");
+                logUtil.usuallyPrintLogerln("awaitThread 监听到 Flag 以为 false 所以退出");
             }
         });
-        awaitThread.setName("awaitThread serverSocket 监听");
+        awaitThread.setName("核心 ServerSocket 线程");
         if (allowPrintThreadList){
-            logUtils.debugLoger("开启 ThreadList 状态打印");
+            logUtil.debugLoger("开启 ThreadList 状态打印");
             if (threadListForPrint == null){
                 threadListForPrint = new ArrayList<>();
             }
@@ -187,19 +219,35 @@ public class SimpleHttpServer {
             threadListForPrint.add(awaitThread);
         }
         awaitThread.start();
-        logUtils.debugLoger("serverSocket 线程 开启成功");
+        logUtil.debugLoger("核心 ServerSocket 线程 开启成功");
     }
 
+    /**
+     * 接受 ServerSocket 转发过来的 socket ，开启一个独立线程对 socket 的内容进行处理
+     *
+     * 每个请求都会有一个随机 0~10000 的整数标记
+     * 新的子线程会先从 socket 里面解析出一个 Request 对象
+     * 并通过 Request 来生成一个 Response对象
+     *
+     * 然后读取通过 Request 的 uri 以及 查看是否拥有自定义的特殊访问路径处理方法
+     * 判断如何对 Request 和 Response 进行处理
+     *
+     * 如果是自定义的特殊访问路径，那么将会把 Request 和 Response 转发给自定义的 HandleMethod 处理
+     * 否则会按照默认状态处理
+     *
+     * 默认状态处理就是将所有的请求看成是对静态资源的请求
+     * 调用的就是 Response 的 sendStaticResource() 方法
+     *
+     *
+     * @param socket
+     */
     private void startSocketThread(Socket socket){
         int randomThreadNum = (int)(Math.random()*10000);
-        logUtils.debugLoger("收到一个请求，编号"+randomThreadNum);
+        logUtil.debugLoger("收到一个请求，编号"+randomThreadNum);
         Thread temp = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    //获取 socket 的 input 和 output
-//                    input = socket.getInputStream();
-//                    output = socket.getOutputStream();
                     //解析 socket 里面的 Requset 请求
                     Request request = RequestParseUtil.parseRequset(socket);
                     // 当 useHandleMethod 并且拥有对这个 uri 请求路径的处理方法的时候才处理
@@ -208,15 +256,15 @@ public class SimpleHttpServer {
                         throw new WebServerException(randomThreadNum + "报文长度为0，报文舍弃");
                     }
                     if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri().split("\\?")[0])){
-                        logUtils.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
+                        logUtil.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
                         HandleMethod handleMethod = handleMethodsMap.get(request.getUri().split("\\?")[0]);
                         Response response = new Response(request);
                         handleMethod.RequestDo(request,response);
-                        logUtils.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
+                        logUtil.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
                     }else {
                         Response response = new Response(request);
                         response.sendStaticResource();
-                        logUtils.debugLoger(randomThreadNum + "请求返回处理完成");
+                        logUtil.debugLoger(randomThreadNum + "请求返回处理完成");
                         response.closeStream();
                     }
                 } catch (IOException | WebServerException e) {
@@ -226,7 +274,8 @@ public class SimpleHttpServer {
                     try {
                         if (!socket.isClosed()){
                             socket.close();
-                            logUtils.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
+                            threadListForPrint.clear();
+                            logUtil.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -255,26 +304,23 @@ public class SimpleHttpServer {
     public void close() throws Exception{
         if (awaitThread.isAlive()){
             continueAcceptFlag = false;
-            logUtils.debugLoger("将 continueAcceptFlag 设置为 false ");
+            logUtil.debugLoger("将 continueAcceptFlag 设置为 false ");
             sendLastAcceptToServerSocket();
-            logUtils.debugLoger("发送了最后一个请求");
-            closeServerSocket();
-            logUtils.debugLoger("关闭了 serverSocket ");
-            logUtils.debugLoger("SimpleHttpServer 应该已经退出了");
+            logUtil.debugLoger("发送了最后一个请求");
+            if (!serverSocket.isClosed()){
+                serverSocket.close();
+            }
+            logUtil.debugLoger("关闭了 serverSocket ");
+            logUtil.debugLoger("SimpleHttpServer 应该已经退出了");
             sendLastAcceptToServerSocket();
         }else {
-            logUtils.debugLoger("线程未启动");
-        }
-    }
-
-    private void closeServerSocket() throws IOException {
-        if (!serverSocket.isClosed()){
-            serverSocket.close();
+            logUtil.debugLoger("线程未启动");
         }
     }
 
     /**
-     * 在将 continueAcceptFlag 设置为 false 之后要发送最有一个请求，接触 accept 的拥塞
+     * 发送最后一个请求结束核心 accept 方法的拥塞
+     * 因为在将 continueAcceptFlag 设置为 false 之后 ServerSocket 仍有可能处在拥塞状态
      */
     private void sendLastAcceptToServerSocket() {
         //建立连接
@@ -284,13 +330,18 @@ public class SimpleHttpServer {
             OutputStream out = socket.getOutputStream() ;
             out.write("a".getBytes());
             out.close();
+            socket.close();
+            socket = null;
         } catch (IOException e) {
-            logUtils.debugLoger("最终请求发送失败，ServerSocket 已经关闭");
+            logUtil.debugLoger("最终请求发送失败，ServerSocket 已经关闭");
         }
 
     }
 
-    //循环打印当前线程 List 情况
+    /**
+     * 单独线程，每隔 5s 打印一遍 Ezerver 所有线程的情况，包括核心 ServerSocket 线程
+     * 然后会将已经消亡的线程移出 ThreadList
+     */
     private void startPrintThreadLoger(){
         ArrayList<Thread> removeList = new ArrayList<>();
         new Thread(new Runnable() {
@@ -302,23 +353,26 @@ public class SimpleHttpServer {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    if (!continueAcceptFlag){
+                        logUtil.usuallyPrintLogerln("\t\t | continueAcceptFlag 为 false，线程结束");
+                    }
                     if (threadListForPrint.size()==0){
-                        logUtils.usuallyPrintLogerln("\t\t | 线程 List 已经清空，该 ThreadList 监听线程结束");
+                        logUtil.usuallyPrintLogerln("\t\t | 线程 List 已经清空，该 ThreadList 监听线程结束");
                         break;
                     }
-                    logUtils.usuallyPrintLogerln("\t\t -------------------------------------");
-                    logUtils.usuallyPrintLogerln("\t\t | 共有 " + threadListForPrint.size() + " 个线程");
+                    logUtil.usuallyPrintLogerln("\t\t -------------------------------------");
+                    logUtil.usuallyPrintLogerln("\t\t | 共有 " + threadListForPrint.size() + " 个线程");
                     for (int i = 0; i< threadListForPrint.size(); i++){
-                        logUtils.usuallyPrintLoger("\t\t | No " + i+" : ");
+                        logUtil.usuallyPrintLoger("\t\t | No " + i+" : ");
                         if (threadListForPrint.get(i).isAlive()){
-                            logUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程建在");
+                            logUtil.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程建在");
                         }else {
-                            logUtils.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程消亡");
+                            logUtil.usuallyPrintLogerln(threadListForPrint.get(i).getName()+" 线程消亡");
                             removeList.add(threadListForPrint.get(i));
                         }
                     }
-                    logUtils.usuallyPrintLogerln("\t\t | 清理 "+removeList.size()+" 个线程");
-                    logUtils.usuallyPrintLogerln("\t\t -------------------------------------");
+                    logUtil.usuallyPrintLogerln("\t\t | 清理 "+removeList.size()+" 个线程");
+                    logUtil.usuallyPrintLogerln("\t\t -------------------------------------");
                     threadListForPrint.removeAll(removeList);
                     removeList.clear();
                 }
@@ -326,6 +380,11 @@ public class SimpleHttpServer {
         }).start();
     }
 
+    /**
+     * 通过这个方法，为 ServerSocket 增加对 特定请求路径 的自定义处理
+     *
+     * @param handleMethod
+     */
     private void addHandleMethod(HandleMethod handleMethod){
         if (!useHandleMethod){
             useHandleMethod = true;
@@ -333,10 +392,16 @@ public class SimpleHttpServer {
         handleMethodsMap.put(handleMethod.getUri().split("\\?")[0],handleMethod);
     }
 
+    /**
+     * 开启 Debug 状态 以开启 Debug 日志打印
+     */
     private void debug(){
-        SimpleHttpServer.logUtils.setPrintDebug(true);
+        SimpleHttpServer.logUtil.setPrintDebug(true);
     }
 
+    /**
+     * 开启 单独线程 打印 Ezerver 所有线程的情况
+     */
     private void allowPrintThreadList(){
         allowPrintThreadList = true;
     }

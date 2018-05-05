@@ -3,11 +3,18 @@ package com.ericwyn.ezerver.util;
 import com.ericwyn.ezerver.response.ContentType;
 
 /**
+ *
+ *
+ *
  * Created by Ericwyn on 18-5-4.
  */
 public class ResponseUtil {
+    /**
+     * 通过请求头的 URI 信息，或者文件名来匹配 Response 的 ContentType 类型
+     * @param requestUri
+     * @return
+     */
     public static ContentType getResponseContentType(String requestUri){
-
         if (requestUri.toLowerCase().endsWith(".html")){
             return ContentType.TEXT_HTML;
         }else if (requestUri.toLowerCase().endsWith(".js")){

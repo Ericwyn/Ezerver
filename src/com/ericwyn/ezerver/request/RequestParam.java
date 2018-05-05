@@ -1,6 +1,8 @@
 package com.ericwyn.ezerver.request;
 
 /**
+ * Request 当中的请求参数
+ *
  * Created by Ericwyn on 18-5-4.
  */
 public class RequestParam {

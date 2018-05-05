@@ -1,9 +1,11 @@
 package com.ericwyn.ezerver.util;
 
 /**
+ * 日志打印工具
+ *
  * Created by Ericwyn on 18-5-4.
  */
-public class LogUtils {
+public class LogUtil {
     private boolean printDebug = false;
     private boolean printErrorLog = true;
 

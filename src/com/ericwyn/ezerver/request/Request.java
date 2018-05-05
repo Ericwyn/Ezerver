@@ -1,13 +1,6 @@
 package com.ericwyn.ezerver.request;
 
-import com.ericwyn.ezerver.SimpleHttpServer;
-import com.ericwyn.ezerver.expection.WebServerException;
-import com.ericwyn.ezerver.util.LogUtils;
-
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.HashMap;
 
@@ -55,7 +48,7 @@ public class Request {
 
     private Socket socket;
 
-    //设置该 Request 来自的 Socket 和读取的 bufferReader
+    // 设置该 Request 来自的 Socket 和读取的 bufferReader
     // bufferReader 为了解决请求报文中文乱码的问题
     public Request(Socket socket, BufferedReader bufferReader){
         this.socket = socket;
@@ -232,7 +225,6 @@ public class Request {
         }
         return paramMap;
     }
-
 
     public String getMethodName(){
         if (this.method == METHOD_GET){

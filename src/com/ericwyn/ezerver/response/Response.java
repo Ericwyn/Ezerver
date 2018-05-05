@@ -2,14 +2,12 @@ package com.ericwyn.ezerver.response;
 
 import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.SimpleHttpServer;
-import com.ericwyn.ezerver.util.LogUtils;
+import com.ericwyn.ezerver.util.LogUtil;
 import com.ericwyn.ezerver.util.ResponseUtil;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
@@ -36,7 +34,7 @@ import java.net.SocketException;
 public class Response {
 
     private static final int BUFFER_SIZE = 2048;
-    private static LogUtils logUtils = SimpleHttpServer.logUtils;
+    private static LogUtil sLogUtil = SimpleHttpServer.logUtil;
 
     private Request requset;
     private OutputStream output ;
@@ -46,11 +44,29 @@ public class Response {
         this.output = request.getSocket().getOutputStream();
     }
 
+    private OutputStream getOutputStream() {
+        return output;
+    }
+
+    public void setOutput(OutputStream output) {
+        this.output = output;
+    }
+
+    /**
+     * sendStaticResource 是默认的对静态资源 GET 请求的处理方法
+     *
+     * 包括其他的一些没有设定的特殊的请求，也将使用这个方法自动处理
+     * 如果资源不存在的话将会返回 404 页面
+     *
+     * @throws IOException
+     */
     public void sendStaticResource() throws IOException{
         try {
             //通过 uri 获取文件地址
             if (requset==null){
-                output.write(ErrorMsg.ERR_404_MSG.getBytes());
+                sendResponseLine(StateCode.CODE_404);
+                sendResponseHeader(ContentType.TEXT_HTML);
+                sendResponseBody(ErrorMsg.ERR_404_MSG);
             }else {
                 String fileName = requset.getUri().split("\\?")[0];
                 File file = new File(SimpleHttpServer.WEB_ROOT,fileName);
@@ -72,42 +88,53 @@ public class Response {
             }
 
         }catch (SocketException e){
-            logUtils.errorLoger("连接发生异常，可能是连接已经断开：异常信息如下："+e.getMessage());
+            sLogUtil.errorLoger("连接发生异常，可能是连接已经断开：异常信息如下："+e.getMessage());
         }
     }
 
+    /**
+     * 内部调用方法
+     *
+     * 发送响应报文的 响应行
+     *
+     * 格式类似于是
+     *
+     *      HTTP/1.1 200 OK
+     *
+     * @param stateCode
+     * @throws IOException
+     */
     private void sendResponseLine(StateCode stateCode) throws IOException {
         output.write(("HTTP/1.1 "+stateCode).getBytes());
     }
 
+    /**
+     * 内部调用方法
+     *
+     * 发送响应报文的 响应头 信息
+     *
+     * 格式类似于
+     *
+     *      Content-Type: text/html; charset=UTF-8
+     *
+     * @param contentType
+     * @throws IOException
+     */
     private void sendResponseHeader(ContentType contentType) throws IOException {
         output.write(("Content-Type: "+contentType+"; charset=UTF-8\n\n").getBytes());
     }
 
-    public OutputStream getOutputStream() {
-        return output;
-    }
 
-    //发送文件形式的 ResponseBody
-    //不判断文件是否存在
+    /**
+     * 内部调用方法
+     *
+     * 往响应报文的 响应体 信息
+     * 直接发送写好的文件
+     *
+     * @param file
+     * @throws IOException
+     */
     private void sendResponseBody(File file) throws IOException {
-//        FileInputStream fis = new FileInputStream(file);
-//        byte[] buffer = new byte[fis.available()];
-//        int readLength;
-//        while ((readLength = fis.read(buffer,0,BUFFER_SIZE))>0){
-//            output.write(buffer,0,readLength);
-//            output.flush();
-//        }
-//        output.write(buffer,0,readLength);
-        //临时的文件读取流要在这里关闭
-//        fis.close();
-
-//        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-//        byte[] bytes = new byte[bis.available()];
-//        int read = bis.read(bytes);
-//        output.write(bytes,0,read);
-//        bis.close();
-
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
         byte[] bytes = new byte[2048];
         int read;
@@ -118,36 +145,72 @@ public class Response {
         bis.close();
     }
 
-    //直接发送文字形式的 ResponseBody
+    /**
+     * 内部调用方法
+     *
+     * 往响应报文的 响应体 信息
+     * 发送字符串转换得到的 Byte[]
+     *
+     * @param bodyStr
+     * @throws IOException
+     */
     private void sendResponseBody(String bodyStr) throws IOException {
         output.write(bodyStr.getBytes());
     }
 
-    //用户返回 json 数据
+
+    /**
+     * 外部可调用方法
+     *
+     * 返回封装好 JSON 数据的响应报文
+     * 用户直接调用就可以向客户端返回 JSON 数据了
+     *
+     * @param json 需要发送的 JSON 文本串
+     * @throws IOException
+     */
     public void sendJsonData(String json) throws IOException {
         sendResponseLine(StateCode.CODE_200);
         sendResponseHeader(ContentType.APPLICTION_JSON);
         sendResponseBody(json);
     }
 
-    //用户返回文件下载
-    //文件不处在时候返回404
+    /**
+     * 外部可调用方法
+     *
+     * 返回封装好 文件数据 的响应报文
+     * 用户直接调用就可以往客户端返回文件流了
+     *
+     * @param file 需要发送给客户端的文件
+     *
+     * @throws IOException
+     */
     public void sendFileStream(File file) throws IOException {
         sendResponseLine(StateCode.CODE_200);
         sendResponseHeader(ContentType.APPLICTION_OCTET_STREAM);
         if (file.exists()){
-            logUtils.debugLoger("请求文件： "+file.getAbsolutePath()+" 存在");
+            sLogUtil.debugLoger("请求文件： "+file.getAbsolutePath()+" 存在");
             sendResponseBody(file);
         }else {
             sendResponseBody(ErrorMsg.ERR_404_MSG);
         }
     }
 
+    /**
+     * 外部可调用方法
+     *
+     * 用户使用这个方法可关闭这个 Response 和 Request
+     * 包括 Request 其中的 socket 连接
+     * 并将全部资源设为 null
+     *
+     * @throws IOException
+     */
     public void closeStream() throws IOException {
         this.requset.getBufferReader().close();
+        this.requset.setBufferReader(null);
         this.getOutputStream().close();
+        this.setOutput(null);
         this.requset.getSocket().close();
         this.requset = null;
-        logUtils.debugLoger("关闭了 inputStream 和 outputStream 和请求的 Socket 连接");
+        sLogUtil.debugLoger("关闭了 inputStream 和 outputStream 和请求的 Socket 连接");
     }
 }
