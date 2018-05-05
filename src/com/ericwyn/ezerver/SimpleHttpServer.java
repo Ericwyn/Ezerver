@@ -146,8 +146,11 @@ public class SimpleHttpServer {
         awaitThread.setName("awaitThread serverSocket 监听");
         if (allowPrintThreadList){
             logUtils.debugLoger("开启 ThreadList 状态打印");
-            threadListForPrint.add(awaitThread);
+            if (threadListForPrint == null){
+                threadListForPrint = new ArrayList<>();
+            }
             startPrintThreadLoger();
+            threadListForPrint.add(awaitThread);
         }
         awaitThread.start();
         logUtils.debugLoger("serverSocket 线程 开启成功");
@@ -218,7 +221,6 @@ public class SimpleHttpServer {
         });
         temp.setName("监听线程 "+ randomThreadNum);
         if (allowPrintThreadList){
-            threadListForPrint = new ArrayList<>();
             threadListForPrint.add(temp);
         }
         temp.start();
@@ -279,6 +281,11 @@ public class SimpleHttpServer {
             @Override
             public void run() {
                 while (true){
+                    try {
+                        Thread.sleep(5000L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     if (threadListForPrint.size()==0){
                         logUtils.usuallyPrintLogerln("\t\t | 线程 List 已经清空，该 ThreadList 监听线程结束");
                         break;
@@ -298,11 +305,6 @@ public class SimpleHttpServer {
                     logUtils.usuallyPrintLogerln("\t\t -------------------------------------");
                     threadListForPrint.removeAll(removeList);
                     removeList.clear();
-                    try {
-                        Thread.sleep(5000L);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
         }).start();

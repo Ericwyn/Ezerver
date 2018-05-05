@@ -4,6 +4,7 @@
 
 Ezerver 是一个基于 socket 的简易 web 服务器，有了它，你只需要几行 java 代码，就可以使用 java 搭建一个 web  服务器，以此来处理静态的 Http 请求，或者是编写一些 API 请求
 
+该项目的Github地址是 [Github-Ezerver](https://github.com/Ericwyn/Giethoorn/tree/EzeServer)
 
 ## 快速开始
 假设我们将一个静态网页`index.html`放在 `/home/www/testweb` 路径下
