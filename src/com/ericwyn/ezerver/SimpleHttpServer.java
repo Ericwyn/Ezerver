@@ -6,14 +6,10 @@ import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.response.Response;
 import com.ericwyn.ezerver.util.LogUtils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -96,15 +92,50 @@ public class SimpleHttpServer {
 //        ss.close();
 //    }
 
-    public SimpleHttpServer(){
+    private SimpleHttpServer(){}
+
+    public static class Builder{
+        private SimpleHttpServer server;
+        public Builder(){
+            server=new SimpleHttpServer();
+        }
+
+        public Builder setServerPort(int serverPort){
+            this.server.setServerPort(serverPort);
+            return this;
+        }
+
+        public Builder setWebRoot(String webRoot){
+            this.server.setWebRoot(webRoot);
+            return this;
+        }
+
+        public Builder allowDebug(){
+            this.server.debug();
+            return this;
+        }
+
+        public Builder allowPrintThreadList(){
+            this.server.allowPrintThreadList();
+            return this;
+        }
+
+        public Builder addHandleMethod(HandleMethod handleMethod){
+            this.server.addHandleMethod(handleMethod);
+            return this;
+        }
+
+        public SimpleHttpServer build(){
+            return this.server;
+        }
 
     }
 
-    public void setServerPort(int serverPort){
+    private void setServerPort(int serverPort){
         newPort = serverPort;
     }
 
-    public void setWebRoot(String webRoot){
+    private void setWebRoot(String webRoot){
         this.newWebRoot = webRoot;
     }
 
@@ -296,18 +327,18 @@ public class SimpleHttpServer {
         }).start();
     }
 
-    public void addHandleMethod(HandleMethod handleMethod){
+    private void addHandleMethod(HandleMethod handleMethod){
         if (!useHandleMethod){
             useHandleMethod = true;
         }
         handleMethodsMap.put(handleMethod.getUri().split("\\?")[0],handleMethod);
     }
 
-    public void debug(){
+    private void debug(){
         SimpleHttpServer.logUtils.setPrintDebug(true);
     }
 
-    public void allowPrintThreadList(){
+    private void allowPrintThreadList(){
         allowPrintThreadList = true;
     }
 }
