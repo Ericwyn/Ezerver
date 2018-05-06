@@ -101,26 +101,27 @@ public class RequestParseUtil {
      */
     private static void parseGET(Request request,String[] requestLine){
         for (int i=1;i<requestLine.length;i++){
-            if (requestLine[i].startsWith("Host: ")){
-                request.setHost(requestLine[i].replace("Host: ",""));
-            }else if (requestLine[i].startsWith("Connection: ")){
-                request.setConnection(requestLine[i].replace("Connection: ",""));
-            }else if (requestLine[i].startsWith("Pragma: ")){
-                request.setPragma(requestLine[i].replace("Pragma: ",""));
-            }else if (requestLine[i].startsWith("Cache-Control: ")){
-                request.setCacheControl(requestLine[i].replace("Cache-Control: ",""));
-            }else if (requestLine[i].startsWith("Upgrade-Insecure-Requests: ")){
-                request.setUpgradeInsecureRequests(requestLine[i].replace("Upgrade-Insecure-Requests: ",""));
-            }else if (requestLine[i].startsWith("User-Agent: ")){
-                request.setUserAgent(requestLine[i].replace("User-Agent: ",""));
-            }else if (requestLine[i].startsWith("Accept: ")){
-                request.setAccept(requestLine[i].replace("Accept: ",""));
-            }else if (requestLine[i].startsWith("Accept-Encoding: ")){
-                request.setAcceptEncoding(requestLine[i].replace("Accept-Encoding: ",""));
-            }else if (requestLine[i].startsWith("Accept-Language: ")){
-                request.setAcceptLanguage(requestLine[i].replace("Accept-Language: ",""));
-            }else if (requestLine[i].startsWith("Cookie: ")){
-                request.setCookie(requestLine[i].replace("Cookie: ",""));
+            String lowerCaseTemp = requestLine[i].toLowerCase();
+            if (lowerCaseTemp.startsWith(("Host: ").toLowerCase())){
+                request.setHost(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Connection: ").toLowerCase())){
+                request.setConnection(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Pragma: ").toLowerCase())){
+                request.setPragma(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Cache-Control: ").toLowerCase())){
+                request.setCacheControl(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Upgrade-Insecure-Requests: ").toLowerCase())){
+                request.setUpgradeInsecureRequests(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("User-Agent: ").toLowerCase())){
+                request.setUserAgent(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept: ").toLowerCase())){
+                request.setAccept(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept-Encoding: ").toLowerCase())){
+                request.setAcceptEncoding(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept-Language: ").toLowerCase())){
+                request.setAcceptLanguage(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Cookie: ").toLowerCase())){
+                request.setCookie(requestLine[i].split(": ")[1]);
             }
         }
         //解析参数
@@ -170,33 +171,34 @@ public class RequestParseUtil {
         String[] requestLine = requestGramTemp[0].split("\n");
         //解析请求头信息
         for (int i=1;i<requestLine.length;i++){
-            if (requestLine[i].startsWith("Host: ")){
-                request.setHost(requestLine[i].replace("Host: ",""));
-            }else if (requestLine[i].startsWith("Connection: ")){
-                request.setConnection(requestLine[i].replace("Connection: ",""));
-            }else if (requestLine[i].startsWith("Pragma: ")){
-                request.setPragma(requestLine[i].replace("Pragma: ",""));
-            }else if (requestLine[i].startsWith("Cache-Control: ")){
-                request.setCacheControl(requestLine[i].replace("Cache-Control: ",""));
-            }else if (requestLine[i].startsWith("Upgrade-Insecure-Requests: ")){
-                request.setUpgradeInsecureRequests(requestLine[i].replace("Upgrade-Insecure-Requests: ",""));
-            }else if (requestLine[i].startsWith("User-Agent: ")){
-                request.setUserAgent(requestLine[i].replace("User-Agent: ",""));
-            }else if (requestLine[i].startsWith("Accept: ")){
-                request.setAccept(requestLine[i].replace("Accept: ",""));
-            }else if (requestLine[i].startsWith("Accept-Encoding: ")){
-                request.setAcceptEncoding(requestLine[i].replace("Accept-Encoding: ",""));
-            }else if (requestLine[i].startsWith("Accept-Language: ")){
-                request.setAcceptLanguage(requestLine[i].replace("Accept-Language: ",""));
-            }else if (requestLine[i].startsWith("Cookie: ")){
-                request.setCookie(requestLine[i].replace("Cookie: ",""));
-            }else if (requestLine[i].startsWith("Content-Length: ")){
-                request.setContentLength(Long.parseLong(requestLine[i].replace("Content-Length: ","").trim()));
-            }else if (requestLine[i].startsWith("Origin: ")){
-                request.setOrigin(requestLine[i].replace("Origin: ",""));
-            }else if (requestLine[i].startsWith("Content-Type: ")){
+            String lowerCaseTemp = requestLine[i].toLowerCase();
+            if (lowerCaseTemp.startsWith(("Host: ").toLowerCase())){
+                request.setHost(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Connection: ").toLowerCase())){
+                request.setConnection(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Pragma: ").toLowerCase())){
+                request.setPragma(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Cache-Control: ").toLowerCase())){
+                request.setCacheControl(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Upgrade-Insecure-Requests: ").toLowerCase())){
+                request.setUpgradeInsecureRequests(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("User-Agent: ").toLowerCase())){
+                request.setUserAgent(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept: ").toLowerCase())){
+                request.setAccept(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept-Encoding: ").toLowerCase())){
+                request.setAcceptEncoding(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Accept-Language: ").toLowerCase())){
+                request.setAcceptLanguage(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Cookie: ").toLowerCase())){
+                request.setCookie(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("Content-Length: "))){
+                request.setContentLength(Integer.parseInt(requestLine[i].split(": ")[1]));
+            }else if (lowerCaseTemp.startsWith(("Origin: "))){
+                request.setOrigin(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.toLowerCase().startsWith(("Content-Type: ").toLowerCase())){
                 // 分割 Content-Type: multipart/form-data; boundary=----WebKitFormBoundarypMRuRv2ZaPFS7dUm
-                String contentTypeTemp = requestLine[i].replace("Content-Type: ","");
+                String contentTypeTemp = requestLine[i].split(": ")[1];
                 String[] split = contentTypeTemp.split(";");
                 request.setContentType(split[0]);
                 for (int k=1;k<split.length;k++){
@@ -204,7 +206,9 @@ public class RequestParseUtil {
                         request.setContentTypeBoundray(split[k].trim().replace("\r","").replace("\n","").split("=")[1]);
                     }
                 }
+
             }else if (requestLine[i].startsWith("Referer: ")){
+
                 request.setReferer(requestLine[i].replace("Referer: ",""));
             }
         }
