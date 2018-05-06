@@ -1,0 +1,13 @@
+apply plugin: 'java'
+jar {
+    baseName = 'Ezerver'
+    version = 'alpha-build'
+}
+//配置代码目录，否则默认实在 src/main/java 里面
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}

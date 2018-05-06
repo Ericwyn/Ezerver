@@ -18,6 +18,17 @@ import java.net.SocketAddress;
  *          "ip": "10.50.17.1"
  *      }
  *
+ * -------------------------------------------------------
+ *
+ * this Test show how to make a API server
+ * we will make a API, when user send a GET request to this path
+ * we will return a JSON data of the user's IP address
+ * the JSON data like this
+ *
+ *      {
+ *          "ip": "10.50.17.1"
+ *      }
+ *
  * Created by Ericwyn on 18-5-6.
  */
 public class IPApiTest {

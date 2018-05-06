@@ -17,6 +17,25 @@ import java.io.IOException;
  *      如果是 account 或者 password 错误的话，我们就返回 access fail 提示
  *
  * server 运行在默认的 9090 端口
+ * 用户通过 loaclhost:9090/down 下载文件
+ *
+ * --------------------------------------------------------------------------------------
+ *
+ * You can use Ezerver to make a simple file server with HandleMethod
+ * and you can verify the user's identity
+ *
+ * For example,
+ * suppose the user can only download files using a GET request
+ * with the correct account parameter and the password parameter,
+ * the account needs to be "root"
+ * and the password needs to be "pw"
+ *
+ * If the verification is successful, the user can download the file
+ * otherwise the user will get 404 pages
+ *
+ * notice,the download server running in 9090 port
+ * the down path is loaclhost:9090/down
+ *
  *
  * Created by Ericwyn on 18-5-6.
  */

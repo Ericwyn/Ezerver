@@ -15,7 +15,17 @@ import java.util.Scanner;
  *      键值对提交
  *      JSON 数据提交
  *
- * HTML 代码在 /test/apiTest.html
+ * HTML 代码在 /webroot/apiTest.html
+ *
+ * ---------------------------------------------
+ *
+ * Test GET and POST requests on /test
+ * Test Ajax POST, include
+ *      Normal Ajax POST
+ *      key-value POST
+ *      JSON data POST
+ *
+ * the HTML code in /webroot/apiTest.html
  *
  * Created by Ericwyn on 18-5-5.
  */

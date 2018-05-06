@@ -8,6 +8,13 @@ import com.ericwyn.ezerver.expection.WebServerException;
  *
  *      访问地址是 localhost:9090/index.html，会看到 HTTP SERVER Welcome to Ezerver！和一张图片
  *
+ * ----------------------------------------------------------------
+ *
+ * Quick Start
+ * use Ezerver for static resource server.
+ *
+ *      visit localhost:9090/index.html, you can see the welcome page of Ezerver!
+ *
  * Created by Ericwyn on 18-5-5.
  */
 public class SimpleStart {
