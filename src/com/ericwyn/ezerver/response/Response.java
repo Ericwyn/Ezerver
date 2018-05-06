@@ -6,11 +6,14 @@ import com.ericwyn.ezerver.util.LogUtil;
 import com.ericwyn.ezerver.util.ResponseUtil;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.SocketException;
+import java.util.Date;
 
 /**
  *
@@ -106,7 +109,7 @@ public class Response {
      * @throws IOException
      */
     private void sendResponseLine(StateCode stateCode) throws IOException {
-        output.write(("HTTP/1.1 "+stateCode).getBytes());
+        output.write(("HTTP/1.1 "+stateCode+"\n").getBytes());
     }
 
     /**
@@ -122,7 +125,9 @@ public class Response {
      * @throws IOException
      */
     private void sendResponseHeader(ContentType contentType) throws IOException {
-        output.write(("Content-Type: "+contentType+"; charset=UTF-8\n\n").getBytes());
+        output.write(("Content-Type: "+contentType+"; charset=UTF-8\n").getBytes());
+        output.write(("date: "+new Date().toString()+"\n").getBytes());
+        output.write(("Server: Ezerver"+"\n\n").getBytes());
     }
 
 
