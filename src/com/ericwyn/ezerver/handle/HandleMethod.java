@@ -1,12 +1,9 @@
 package com.ericwyn.ezerver.handle;
 
 import com.ericwyn.ezerver.request.Request;
-import com.ericwyn.ezerver.request.RequestParam;
 import com.ericwyn.ezerver.response.Response;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashMap;
 
 /**
  * 自定义的处理方法

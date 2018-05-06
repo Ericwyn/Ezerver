@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ezerver-Test</title>
+</head>
+<body>
+    <p> use ContentType "application/json" to send JSON data </p>
+    <button onclick="send1()">POST JSON Data</button>
+
+    <br>
+    <br>
+    <p> Send FormData data using the default Ajax method </p>
+    <button onclick="send2()">POST FormData</button>
+
+    <br>
+    <br>
+    <p> use ContentType "application/x-www-form-urlencoded" to send Key-Value data</p>
+    <button onclick="send3()">Send Key-Value Data</button>
+
+    <br>
+    <br>
+    <p> Send FormData data using the default Ajax method and GET</p>
+    <button onclick="send4()">GET FormData</button>
+
+    <br>
+    <br>
+    <br>
+    <p> Notice:This Page just for Ezerver Test!</p>
+    <small> Created by  <a href="https://github.com/Ericwyn">Ericwyn</a> </small>
+</body>
+<script>
+    function send1() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/test', true);
+        xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+        var postStr = "{\"data1\":\"value1\",\"data2\":\"value2\"}";
+        xhr.send(postStr);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log("应答成功");
+                } else {
+                    console.log(xhr.status);
+                    console.log("网络错误");
+                }
+            }
+        }
+    }
+
+    function send2() {
+        var xhr = new XMLHttpRequest();
+        var formData = new FormData();
+        formData.append("key1","key1");
+        formData.append("key2","value-2");
+        formData.append("key3","value-3");
+        xhr.open('POST', '/test', true);
+        xhr.send(formData);
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log("应答成功");
+                } else {
+                    console.log(xhr.status);
+                    console.log("网络错误");
+                }
+            }
+        }
+    }
+
+    function send3() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/test', true);
+        xhr.setRequestHeader('Content-type','application/x-www-form-urlencoded; charset=utf-8');
+        var postStr = "key1=value1&key2=value2";
+        xhr.send(postStr);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log("应答成功");
+                } else {
+                    console.log(xhr.status);
+                    console.log("网络错误");
+                }
+            }
+        }
+    }
+
+    function send4() {
+        var xhr = new XMLHttpRequest();
+        var formData = new FormData();
+        formData.append("key1","key1");
+        formData.append("key2","value-2");
+        formData.append("key3","value-3");
+        xhr.open('GET', '/test?a=1&b=2', true);
+        xhr.send();
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log("应答成功");
+                } else {
+                    console.log(xhr.status);
+                    console.log("网络错误");
+                }
+            }
+        }
+    }
+
+</script>
+</html>

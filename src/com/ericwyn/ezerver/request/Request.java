@@ -2,6 +2,8 @@ package com.ericwyn.ezerver.request;
 
 import java.io.BufferedReader;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 
 /**
@@ -18,6 +20,7 @@ public class Request {
     // 通用 报文 Header
     private int method;
     private String uri;
+    private String decodeURI;
     private String version;
     private String host;
     private String Pragma;
@@ -29,6 +32,7 @@ public class Request {
     private String acceptLanguage;
     private String cookie;
     private String UpgradeInsecureRequests;
+    private String XForwardedFor;
 
     // POST 报文特殊 Header
     private long ContentLength;   //content 长度
@@ -76,7 +80,7 @@ public class Request {
     }
 
     void setUri(String uri) {
-        this.uri = uri;
+        this.uri = URLDecoder.decode(uri);
     }
 
     public String getVersion() {
@@ -217,6 +221,18 @@ public class Request {
 
     public Socket getSocket() {
         return socket;
+    }
+
+    public String getXForwardedFor() {
+        return XForwardedFor;
+    }
+
+    public void setXForwardedFor(String XForwardedFor) {
+        this.XForwardedFor = XForwardedFor;
+    }
+
+    public String getDecodeURI() {
+        return decodeURI;
     }
 
     public HashMap<String, RequestParam> getParamMap() {

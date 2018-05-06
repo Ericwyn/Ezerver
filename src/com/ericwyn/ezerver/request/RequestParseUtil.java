@@ -20,8 +20,6 @@ import java.net.Socket;
 public class RequestParseUtil {
     private static LogUtil sLogUtil = SimpleHttpServer.logUtil;
 
-    // 通过 socket 获取 inputStream，然后先读取 inputStream 的报文详情
-
     /**
      * 通过 socket 获取 inputStream，然后通过 inputStream 获取报文详情
      *
@@ -122,6 +120,8 @@ public class RequestParseUtil {
                 request.setAcceptLanguage(requestLine[i].split(": ")[1]);
             }else if (lowerCaseTemp.startsWith(("Cookie: ").toLowerCase())){
                 request.setCookie(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("X-Forwarded-For: ").toLowerCase())){
+                request.setXForwardedFor(requestLine[i].split(": ")[1]);
             }
         }
         //解析参数
@@ -158,6 +158,8 @@ public class RequestParseUtil {
      *      然后，然后设置请求头 xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
      * 那么会按照第 2 种方式解析第 1 种样式的参数，于是就无法得到正确的 RequestParm
      *
+     * 而对于其他的 ContentType 类型请求的参数解析，暂时是 Ezerver 无能为力的
+     *
      * @param request 目标 Request
      * @param postGram post报文的详情
      *                 由于 POST 报文还带有请求体，所以需要先对整个 请求报文进行一些处理
@@ -192,6 +194,8 @@ public class RequestParseUtil {
                 request.setAcceptLanguage(requestLine[i].split(": ")[1]);
             }else if (lowerCaseTemp.startsWith(("Cookie: ").toLowerCase())){
                 request.setCookie(requestLine[i].split(": ")[1]);
+            }else if (lowerCaseTemp.startsWith(("X-Forwarded-For: ").toLowerCase())){
+                request.setXForwardedFor(requestLine[i].split(": ")[1]);
             }else if (lowerCaseTemp.startsWith(("Content-Length: "))){
                 request.setContentLength(Integer.parseInt(requestLine[i].split(": ")[1]));
             }else if (lowerCaseTemp.startsWith(("Origin: "))){
@@ -253,9 +257,5 @@ public class RequestParseUtil {
             // json 数据文本
             request.setJSONParamString(requestGramTemp[1].replaceAll("\r\n",""));
         }
-        // post 还能有这几种
-        // text/xml 判断
-        // 目前还有bug， 的话
-        // 那么将无法正确处理 RequestParam
     }
 }

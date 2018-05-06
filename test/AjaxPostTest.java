@@ -4,30 +4,40 @@ import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.request.RequestParam;
 import com.ericwyn.ezerver.response.Response;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Scanner;
 
 /**
+ * 测试自定义 /test 路径处理 GET 和 POST 请求
+ * 测试 Ajax 提交 POST 参数，包括
+ *      正常的 POST 提交
+ *      键值对提交
+ *      JSON 数据提交
+ *
+ * HTML 代码在 /test/apiTest.html
+ *
  * Created by Ericwyn on 18-5-5.
  */
-public class Main {
+public class AjaxPostTest {
     public static void main(String[] args) throws Exception {
+
         HandleMethod testMethod = new HandleMethod("/test") {
             @Override
             public void RequestDo(Request request, Response response) throws IOException {
-                // 如果要执行静态请求的话，只需要调用下面的方法就好了
-                // 这样的话效果就和默认处理方式一样了
 
                 HashMap<String, RequestParam> paramMap = request.getParamMap();
-                System.out.println("请求的uri为"+request.getUri());
-                System.out.println("param数量 " + paramMap.size());
-                System.out.println("请求方法为" + request.getMethodName());
-                System.out.println("json 参数为: "+request.getJSONParamString());
+                System.out.println(request.getMethodName() + " 收到请求参数如下");
+                for (String key:paramMap.keySet()){
+                    System.out.println("key:"+key+"\tvalue:"+paramMap.get(key).getValue());
+                }
+                System.out.println();
+                System.out.println("收到 JSON 参数如下");
+                if (request.getJSONParamString()!=null){
+                    System.out.println("json Data :" +request.getJSONParamString());
+                }
 
-                response.sendFileStream(new File("webroot/gapp2.zip"));
-
+                response.sendTextHtml("ok~");
                 response.closeStream();
             }
         };

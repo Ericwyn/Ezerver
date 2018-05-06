@@ -38,6 +38,7 @@ public class Response {
 
     private Request requset;
     private OutputStream output ;
+    private String character = "UTF-8";
 
     public Response(Request request) throws IOException {
         this.requset = request;
@@ -174,10 +175,33 @@ public class Response {
         sendResponseBody(json);
     }
 
+    /**
+     * 外部可调用方法
+     *
+     * 直接返回 HTML 代码
+     * 用户直接调用就可以向客户端返回 JSON 数据了
+     *
+     * @param textHtml 需要发送的 JSON 文本串
+     * @throws IOException
+     */
     public void sendTextHtml(String textHtml) throws IOException {
         sendResponseLine(StateCode.CODE_200);
         sendResponseHeader(ContentType.TEXT_HTML);
         sendResponseBody(textHtml);
+    }
+
+    /**
+     * 外部可调用方法
+     *
+     * 返回 404 错误给用户
+     *
+     *
+     * @throws IOException
+     */
+    public void send404Page() throws IOException {
+        sendResponseLine(StateCode.CODE_200);
+        sendResponseHeader(ContentType.TEXT_HTML);
+        sendResponseBody(ErrorMsg.ERR_404_MSG);
     }
 
     /**
