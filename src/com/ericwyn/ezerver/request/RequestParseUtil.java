@@ -141,6 +141,7 @@ public class RequestParseUtil {
      *
      *      1，multipart/form-data
      *          这种情况会先进行分割，利用报文首部 ContentType 里面的 boundary 进行分割
+     *          分割线的数量会比请求体当中参数的数量多 1
      *          然后再进一步切割并解析成 RequestParam
      *
      *      2，application/x-www-form-urlencoded
@@ -213,11 +214,14 @@ public class RequestParseUtil {
             //具体参考 http://blog.sina.com.cn/s/blog_3e3fcadd0100y61s.html
             String[] paramListTemp = paramTemp.substring(0,paramTemp.length()-2).split("--"+request.getContentTypeBoundray());
             for (String aParamListTemp : paramListTemp) {
-                if (aParamListTemp.replaceAll("\n","").replaceAll("\r","").trim().equals("")){
+                if (aParamListTemp.replaceAll("\n","").replaceAll("\r","").replaceAll("-","").trim().equals("")){
                     continue;
                 }
+                if (aParamListTemp.startsWith("\r\n")){
+                    aParamListTemp = aParamListTemp.replaceFirst("\r\n","");
+                }
                 String[] temp2 = aParamListTemp.split("\r\n");
-                String[] keyTemp = temp2[1].split(";");
+                String[] keyTemp = temp2[0].split(";");
                 RequestParam param = new RequestParam();
                 for (String aKeyTemp : keyTemp) {
                     if (aKeyTemp.equals("")){
@@ -231,7 +235,7 @@ public class RequestParseUtil {
                         param.setKey(key.substring(0, key.length() - 1));  //去掉前后的 双引号
                     }
                 }
-                param.setValue(temp2[2]);
+                param.setValue(temp2[1]);
                 request.getParamMap().put(param.getKey(),param);
             }
         }else if (request.getContentType().contains("application/x-www-form-urlencoded")){

@@ -274,7 +274,6 @@ public class SimpleHttpServer {
                     try {
                         if (!socket.isClosed()){
                             socket.close();
-                            threadListForPrint.clear();
                             logUtil.debugLoger(randomThreadNum + "请求的 socket 已经关闭");
                         }
                     } catch (IOException e) {

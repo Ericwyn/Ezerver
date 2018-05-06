@@ -174,6 +174,12 @@ public class Response {
         sendResponseBody(json);
     }
 
+    public void sendTextHtml(String textHtml) throws IOException {
+        sendResponseLine(StateCode.CODE_200);
+        sendResponseHeader(ContentType.TEXT_HTML);
+        sendResponseBody(textHtml);
+    }
+
     /**
      * 外部可调用方法
      *
