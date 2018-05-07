@@ -208,7 +208,6 @@ public class Response {
     public void sendHtmlFile(File htmlFile) throws IOException {
         sendResponseLine(StateCode.CODE_200);
         sendResponseHeader(ContentType.TEXT_HTML);
-        sendResponseLine(StateCode.CODE_200);
         if (htmlFile.exists()){
             sLogUtil.debugLoger("请求文件： "+htmlFile.getAbsolutePath()+" 存在");
             sendResponseBody(htmlFile);
