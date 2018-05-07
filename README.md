@@ -62,6 +62,6 @@ visit `localhost:9090/index.html` and you can see the welcome page on `webroot` 
 ## Example project
 
 ### Leablog
- - visit [Leablog-Github]()
+ - visit [Leablog-Github](https://github.com/Ericwyn/Leablog)
  - A blog model for [Leanote](https://github.com/leanote/leanote)
  - Ezerver is used instead of Spring Boot as its backend framework.
