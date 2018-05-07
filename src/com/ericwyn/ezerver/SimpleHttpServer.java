@@ -255,13 +255,52 @@ public class SimpleHttpServer {
                     if (request == null){
                         throw new WebServerException(randomThreadNum + "报文长度为0，报文舍弃");
                     }
-                    if (useHandleMethod && handleMethodsMap.keySet().contains(request.getUri().split("\\?")[0])){
-                        logUtil.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
-                        HandleMethod handleMethod = handleMethodsMap.get(request.getUri().split("\\?")[0]);
-                        Response response = new Response(request);
-                        handleMethod.RequestDo(request,response);
-                        logUtil.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
-                    }else {
+                    if (useHandleMethod){
+                        boolean canFindMatchHandleMethod = false;
+                        //是否能够以 uriTemp 匹配上
+                        String uriTemp = request.getUri().split("\\?")[0];
+                        if (handleMethodsMap.get(uriTemp)!=null){
+                            canFindMatchHandleMethod = true;
+                        }
+                        //是否能够以 uriTemp.replaceFirst("/","") 匹配上
+                        if (!canFindMatchHandleMethod){
+                            if (handleMethodsMap.get(uriTemp.replaceFirst("/",""))!=null){
+                                uriTemp = uriTemp.replaceFirst("/","");
+                                canFindMatchHandleMethod = true;
+                            }
+                        }
+                        //如果能够匹配上的话,确保 强制匹配的优先级高于 正则匹配
+                        if (canFindMatchHandleMethod){
+                            HandleMethod handleMethod = handleMethodsMap.get(uriTemp);
+                            Response response = new Response(request);
+                            handleMethod.requestDo(request,response);
+                            logUtil.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
+                            canFindMatchHandleMethod = true;
+                        }else {
+                            //如果不能匹配上了，再来找找正则匹配
+                            for (String key:handleMethodsMap.keySet()){
+                                if (handleMethodsMap.get(key).isMatchRegex()){
+                                    //这样的话优先级看的是 handleMethod 在 map 里面的顺序啊有点迷幻啊
+                                    if (request.getUri().split("\\?")[0].matches(key)){
+                                        logUtil.debugLoger(randomThreadNum + "请求被转发到自定义的 HandleMethod");
+                                        HandleMethod handleMethod = handleMethodsMap.get(key);
+                                        Response response = new Response(request);
+                                        handleMethod.requestDo(request,response);
+                                        logUtil.debugLoger(randomThreadNum + "自定义 HandleMethod 处理完毕");
+                                        canFindMatchHandleMethod = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        //如果都无法找到的话，那么就直接使用 静态返回
+                        if (!canFindMatchHandleMethod){
+                            Response response = new Response(request);
+                            response.sendStaticResource();
+                            logUtil.debugLoger(randomThreadNum + "请求返回处理完成");
+                            response.closeStream();
+                        }
+                    } else {
                         Response response = new Response(request);
                         response.sendStaticResource();
                         logUtil.debugLoger(randomThreadNum + "请求返回处理完成");
