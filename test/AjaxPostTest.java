@@ -34,7 +34,7 @@ public class AjaxPostTest {
 
         HandleMethod testMethod = new HandleMethod("/test") {
             @Override
-            public void RequestDo(Request request, Response response) throws IOException {
+            public void requestDo(Request request, Response response) throws IOException {
 
                 HashMap<String, RequestParam> paramMap = request.getParamMap();
                 System.out.println(request.getMethodName() + " 收到请求参数如下");

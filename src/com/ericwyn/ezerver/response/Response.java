@@ -2,16 +2,15 @@ package com.ericwyn.ezerver.response;
 
 import com.ericwyn.ezerver.request.Request;
 import com.ericwyn.ezerver.SimpleHttpServer;
+import com.ericwyn.ezerver.util.HtmlUtils;
 import com.ericwyn.ezerver.util.LogUtil;
 import com.ericwyn.ezerver.util.ResponseUtil;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.util.Date;
 
@@ -61,10 +60,24 @@ public class Response {
      *
      * 包括其他的一些没有设定的特殊的请求，也将使用这个方法自动处理
      * 如果资源不存在的话将会返回 404 页面
+     * 默认不允许显示文件夹
      *
      * @throws IOException
      */
     public void sendStaticResource() throws IOException{
+        sendStaticResource(false,null);
+    }
+
+    /**
+     * sendStaticResource 是默认的对静态资源 GET 请求的处理方法
+     *
+     * 包括其他的一些没有设定的特殊的请求，也将使用这个方法自动处理
+     * 如果资源不存在的话将会返回 404 页面
+     *
+     * @param enableShowDirHtml 是否允许显示在访问路径为文件夹的时候显示出来
+     * @throws IOException
+     */
+    public void sendStaticResource(boolean enableShowDirHtml,String downloadPageTitle) throws IOException{
         try {
             //通过 uri 获取文件地址
             if (requset==null){
@@ -84,9 +97,14 @@ public class Response {
                     //输出文件信息
                     sendResponseBody(file);
                 }else {
-                    sendResponseLine(StateCode.CODE_404);
-                    sendResponseHeader(ContentType.TEXT_HTML);
-                    sendResponseBody(ErrorMsg.ERR_404_MSG);
+                    if (enableShowDirHtml  && file.isDirectory()){
+                        //显示文件夹页面
+                        sendTextHtml(HtmlUtils.makeDirHtml(file,downloadPageTitle));
+                    }else {
+                        sendResponseLine(StateCode.CODE_404);
+                        sendResponseHeader(ContentType.TEXT_HTML);
+                        sendResponseBody(ErrorMsg.ERR_404_MSG);
+                    }
                 }
 
             }

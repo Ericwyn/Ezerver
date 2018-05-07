@@ -36,7 +36,7 @@ public class IPApiTest {
 
         HandleMethod method = new HandleMethod("/ip") {
             @Override
-            public void RequestDo(Request request, Response response) throws IOException {
+            public void requestDo(Request request, Response response) throws IOException {
                 String resJsonDataBuilder = null;
                 if (request.getXForwardedFor()!=null){
                     // 直接通过 X-Forwarded-For 来获取 ip 参数

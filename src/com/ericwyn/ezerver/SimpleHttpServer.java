@@ -52,8 +52,14 @@ public class SimpleHttpServer {
     //是否有用户自定义的 handleMethod 的flag
     private boolean useHandleMethod = false;
 
+    //是否在返回文件夹页面
+    private boolean enableShowDirHtml = false;
+
     //自定义的各种处理方法，处理对特定 URI 的访问请求
     private HashMap<String,HandleMethod> handleMethodsMap = new HashMap<>();
+
+    // 文件下载页面的 默认 Title
+    private String fileDownloadPageTitle ;
 
     //日志工具，与 Ezerver 其他工具类共享
     public static LogUtil logUtil = new LogUtil();
@@ -114,6 +120,29 @@ public class SimpleHttpServer {
          */
         public Builder allowPrintThreadList(){
             this.server.allowPrintThreadList();
+            return this;
+        }
+
+        /**
+         * 是否允许打印 Ezerver 的线程情况
+         * 调用该方法后，SimpleHttpServer 在开启后会每隔一段时间就打印一遍 ThreadList 的情况
+         *
+         * @return
+         */
+        public Builder allowShowDirRequest(){
+            this.server.allowShowDirRequest();
+            return this;
+        }
+
+        /**
+         * 是否允许打印 Ezerver 的线程情况
+         * 调用该方法后，SimpleHttpServer 在开启后会每隔一段时间就打印一遍 ThreadList 的情况
+         *
+         * @return
+         */
+        public Builder allowShowDirRequest(String downloadPageTitle){
+            this.server.allowShowDirRequest();
+            this.server.fileDownloadPageTitle = downloadPageTitle;
             return this;
         }
 
@@ -302,7 +331,13 @@ public class SimpleHttpServer {
                         }
                     } else {
                         Response response = new Response(request);
-                        response.sendStaticResource();
+                        if (enableShowDirHtml){
+                            // 如果允许展示下载页面的话，那么就传入 true 参数
+                            // fileDownloadPageTitle 是文件下载页面的 title样式 的http代码
+                            response.sendStaticResource(true,fileDownloadPageTitle);
+                        }else {
+                            response.sendStaticResource();
+                        }
                         logUtil.debugLoger(randomThreadNum + "请求返回处理完成");
                         response.closeStream();
                     }
@@ -442,5 +477,14 @@ public class SimpleHttpServer {
      */
     private void allowPrintThreadList(){
         allowPrintThreadList = true;
+    }
+
+    /**
+     * 开启之后，如果一静态资源方式访问文件夹的话，那么将会返回文件页面
+     * 一个静态资源服务器的文件夹页面
+     *
+     */
+    private void allowShowDirRequest(){
+        enableShowDirHtml = true;
     }
 }

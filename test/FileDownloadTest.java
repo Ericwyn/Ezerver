@@ -43,7 +43,7 @@ public class FileDownloadTest {
     public static void main(String[] args) throws WebServerException {
         HandleMethod method = new HandleMethod("/down") {
             @Override
-            public void RequestDo(Request request, Response response) throws IOException {
+            public void requestDo(Request request, Response response) throws IOException {
                 if (request.getMethod() != Request.METHOD_GET
                         || request.getParamMap().size() != 2
                         || request.getParamMap().get("account") == null
