@@ -1,7 +1,16 @@
 # Ezerver 
 [![](https://jitpack.io/v/Ericwyn/Ezerver.svg)](https://jitpack.io/#Ericwyn/Ezerver)
 
-A simple HTTP web server
+<pre>
+    _____
+    | ____|_______ _ ____   _____ _ __
+    |  _| |_  / _ \ '__\ \ / / _ \ '__|
+    | |___ / /  __/ |   \ V /  __/ |
+    |_____/___\___|_|    \_/ \___|_|
+    ----- A simple HTTP file server -----
+    ----------------------------------------
+
+</pre>
 
 ## Get Ezerver
 
