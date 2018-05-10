@@ -75,11 +75,29 @@ Ezerver 对于特定访问 uri 的处理方法全部使用 `HandleMethod` 类来
 **注意!!!**, 所有的 `requestDo` 方法, 都应在最后调用 `response.closeStream()`
 
 ### 使用正则表达式匹配特殊 uri 
+使用 `HandleMethod(String uri,boolean matchRegex)` 构造方法且 `matchRegex`参数为 `true`时候, 新建的 `HandleMethod` 对象, 能够使用正则表达式来设置匹配的 uri
+
 ### 使用字符串匹配 uri
 
+使用 `HandleMethod(String uri)` 构造方法新建的 `HandleMethod` 对象, 将限定该 `HandleMethod` 只对该 uri 起作用
+
+注意, 当使用 字符串匹配 uri 新建的 `HandleMethod` 与使用正则表达式匹配 uri 方式新建的`HandleMethod` 出现冲突的时候, 使用字符串匹配 uri 的 `HandleMethod` 将拥有更高的优先权. 
+
 ## 接受请求参数
+`Ezerver` 能够接受带有请求参数的 GET 请求以及 POST 请求, 并且解析请求存放到 `Request` 的 `HashMap<String,RequestParam> paramMap` 当中
+
 ### 获取请求参数
+使用`Request.getParamMap()` 就能够获取到 request 里面的请求参数了, 支持 GET 请求的 uri 参数, POST 请求的话, 只支持一下三种 `Content-Type` 传送过来的参数
+
+ - `multipart/form-data`
+ 支持键值对形式的参数解析, 注意:不支持解析文件请求
+ - `application/x-www-form-urlencoded`
+ 支持键值对形式参数解析
+ - `application/json`
+ 支持 json 数据获取
+
 ### 获取 JSON 请求数据
+当 POST 请求的 `Content-Type` 设置为 `application/json` 的时候, Request 将会保存请求体当中的整串 `Json` 串到 `Request.JSONParamString` 当中, 方便用户后续使用 Json 序列化工具解析
 
 ## 直接返回 HTML 文本/文件
 
