@@ -100,14 +100,19 @@ Ezerver 对于特定访问 uri 的处理方法全部使用 `HandleMethod` 类来
 当 POST 请求的 `Content-Type` 设置为 `application/json` 的时候, Request 将会保存请求体当中的整串 `Json` 串到 `Request.JSONParamString` 当中, 方便用户后续使用 Json 序列化工具解析
 
 ## 直接返回 HTML 文本/文件
+Ezerver 的 `HandleMethod` 里面可以使用 `Response.sendHtmlFile(File htmlFile)`直接返回 HTML 文件
 
 ## 直接返回 JSON 数据
+Ezerver 的 `HandleMethod` 里面可以使用 `Response.sendJsonData(String json)`直接返回 JSON 数据串，配合 JSON 序列化工具，就能实现返回对象 JSON 的功能了
 
 ## 直接返回文件
+Ezerver 也支持直接调用 `Response.sendFileStream(File file)` 方法，直接往客户端返回文件流
 
 ## 直接返回 404 错误页面
+Ezerver 当前只支持返回 404 页面，使用 `Response.send404Page()` 就可以了，后期开发和版本里面会加入更多的返回页面和返回 code
 
 ## 关闭当前请求连接
+使用 `Response.closeStream()` 关闭当前的连接，该方法会先关闭好 Request 的 Reader ，然后关闭 Response 的 Writer，最后再关闭 Socket，执行完之后会将他们全部指向 null
 
 # 服务器开启与关闭
 ## Builder

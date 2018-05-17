@@ -220,7 +220,7 @@ public class Response {
      * 与 sendFileStream() 方法的区别在于 Response Header 的Content-Type 属性
      * 用这个方法可以开启 MVC 当中 View 层的后续关卡
      *
-     * @param htmlFile 需要发送的 JSON 文本串
+     * @param htmlFile 需要发送的 Html 文件
      * @throws IOException
      */
     public void sendHtmlFile(File htmlFile) throws IOException {
