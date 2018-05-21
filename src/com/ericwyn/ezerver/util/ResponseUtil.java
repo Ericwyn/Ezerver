@@ -29,6 +29,8 @@ public class ResponseUtil {
             return ContentType.APPLICTION_JSON;
         }else if (requestUri.toLowerCase().endsWith(".pdf")){
             return ContentType.APPLICTION_PDF;
+        }else if (requestUri.toLowerCase().endsWith(".md")){
+            return ContentType.TEXT_PLAIN;
         }
         //不知道是什么的时候直接返回流
         else {
